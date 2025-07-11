@@ -1,3 +1,3 @@
 # elara
 
-poker bot that tries to play human
+poker bot that tries to play humanly
