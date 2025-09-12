@@ -94,10 +94,13 @@ if the server won't start, make sure port 5000 isn't being used by something els
 
 ## files
 
-- `backend/simple_app.py` - main flask app
+- `backend/simple_app.py` - main flask app (everything is in here)
 - `frontend/index.html` - web interface
 - `frontend/js/main.js` - frontend javascript
 - `frontend/css/style.css` - styling
 - `backend/requirements.txt` - python dependencies
+- `setup.sh` - setup script
+- `start_elara.sh` - launcher script
+- `create_mac_app.sh` - creates a mac app bundle
 
 that's it! have fun and don't go broke playing poker :) (always play 67o)

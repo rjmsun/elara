@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-elara poker calculator - just a fun little poker tool i made
+elara poker calculator - just a fun little poker tool i made (do not trust this for real money decisions lol)
 
 basically does:
 - hand evaluation (figures out what you have)
@@ -8,7 +8,7 @@ basically does:
 - preflop strategy (should you raise/fold)
 - opponent modeling (what they might have)
 
-nothing fancy, just trying to learn some poker math
+nothing fancy, just trying to learn some poker math :p
 """
 
 from flask import Flask, request, jsonify
@@ -550,38 +550,59 @@ class EquityCalculator:
 class PreflopStrategy:
     def __init__(self):
         self.preflop_charts = {
-            'UTG': {
-                'AA': 'RAISE', 'KK': 'RAISE', 'QQ': 'RAISE', 'JJ': 'RAISE', 'TT': 'RAISE',
-                'AKs': 'RAISE', 'AQs': 'RAISE', 'AJs': 'RAISE', 'ATs': 'RAISE',
-                'AKo': 'RAISE', 'AQo': 'RAISE', 'AJo': 'CALL', 'ATo': 'CALL',
-                'KQs': 'RAISE', 'KJs': 'CALL', 'KTs': 'CALL',
-                'QJs': 'CALL', 'QTs': 'CALL',
-                'JTs': 'CALL', 'J9s': 'CALL',
-                'T9s': 'CALL', '98s': 'CALL'
-            },
-            'BTN': {
-                'AA': 'RAISE', 'KK': 'RAISE', 'QQ': 'RAISE', 'JJ': 'RAISE', 'TT': 'RAISE',
-                '99': 'RAISE', '88': 'RAISE', '77': 'RAISE', '66': 'RAISE',
+            'SB': {  # Small Blind (heads up) - more aggressive range
+                'AA': 'RAISE', 'KK': 'RAISE', 'QQ': 'RAISE', 'JJ': 'RAISE', 'TT': 'RAISE', '99': 'RAISE', '88': 'RAISE', '77': 'RAISE', '66': 'RAISE', '55': 'RAISE', '44': 'RAISE', '33': 'RAISE', '22': 'RAISE',
                 'AKs': 'RAISE', 'AQs': 'RAISE', 'AJs': 'RAISE', 'ATs': 'RAISE', 'A9s': 'RAISE', 'A8s': 'RAISE', 'A7s': 'RAISE', 'A6s': 'RAISE', 'A5s': 'RAISE', 'A4s': 'RAISE', 'A3s': 'RAISE', 'A2s': 'RAISE',
-                'AKo': 'RAISE', 'AQo': 'RAISE', 'AJo': 'RAISE', 'ATo': 'RAISE', 'A9o': 'RAISE',
-                'KQs': 'RAISE', 'KJs': 'RAISE', 'KTs': 'RAISE', 'K9s': 'RAISE',
-                'KQo': 'RAISE', 'KJo': 'RAISE', 'KTo': 'RAISE',
-                'QJs': 'RAISE', 'QTs': 'RAISE', 'Q9s': 'RAISE',
-                'QJo': 'RAISE', 'QTo': 'RAISE',
-                'JTs': 'RAISE', 'J9s': 'RAISE', 'J8s': 'RAISE',
-                'JTo': 'RAISE', 'J9o': 'RAISE',
-                'T9s': 'RAISE', 'T8s': 'RAISE', 'T7s': 'RAISE',
-                'T9o': 'RAISE', 'T8o': 'RAISE',
-                '98s': 'RAISE', '97s': 'RAISE', '96s': 'RAISE',
-                '98o': 'RAISE', '97o': 'RAISE',
-                '87s': 'RAISE', '86s': 'RAISE', '85s': 'RAISE',
-                '87o': 'RAISE', '86o': 'RAISE',
-                '76s': 'RAISE', '75s': 'RAISE', '74s': 'RAISE',
-                '76o': 'RAISE', '75o': 'RAISE',
-                '65s': 'RAISE', '64s': 'RAISE', '63s': 'RAISE',
-                '65o': 'RAISE', '64o': 'RAISE',
+                'AKo': 'RAISE', 'AQo': 'RAISE', 'AJo': 'RAISE', 'ATo': 'RAISE', 'A9o': 'RAISE', 'A8o': 'RAISE', 'A7o': 'RAISE', 'A6o': 'RAISE', 'A5o': 'RAISE', 'A4o': 'RAISE', 'A3o': 'RAISE', 'A2o': 'RAISE',
+                'KQs': 'RAISE', 'KJs': 'RAISE', 'KTs': 'RAISE', 'K9s': 'RAISE', 'K8s': 'RAISE', 'K7s': 'RAISE', 'K6s': 'RAISE', 'K5s': 'RAISE', 'K4s': 'RAISE', 'K3s': 'RAISE', 'K2s': 'RAISE',
+                'KQo': 'RAISE', 'KJo': 'RAISE', 'KTo': 'RAISE', 'K9o': 'RAISE', 'K8o': 'RAISE', 'K7o': 'RAISE', 'K6o': 'RAISE', 'K5o': 'RAISE', 'K4o': 'RAISE', 'K3o': 'RAISE', 'K2o': 'RAISE',
+                'QJs': 'RAISE', 'QTs': 'RAISE', 'Q9s': 'RAISE', 'Q8s': 'RAISE', 'Q7s': 'RAISE', 'Q6s': 'RAISE', 'Q5s': 'RAISE', 'Q4s': 'RAISE', 'Q3s': 'RAISE', 'Q2s': 'RAISE',
+                'QJo': 'RAISE', 'QTo': 'RAISE', 'Q9o': 'RAISE', 'Q8o': 'RAISE', 'Q7o': 'RAISE', 'Q6o': 'RAISE', 'Q5o': 'RAISE', 'Q4o': 'RAISE', 'Q3o': 'RAISE', 'Q2o': 'RAISE',
+                'JTs': 'RAISE', 'J9s': 'RAISE', 'J8s': 'RAISE', 'J7s': 'RAISE', 'J6s': 'RAISE', 'J5s': 'RAISE', 'J4s': 'RAISE', 'J3s': 'RAISE', 'J2s': 'RAISE',
+                'JTo': 'RAISE', 'J9o': 'RAISE', 'J8o': 'RAISE', 'J7o': 'RAISE', 'J6o': 'RAISE', 'J5o': 'RAISE', 'J4o': 'RAISE', 'J3o': 'RAISE', 'J2o': 'RAISE',
+                'T9s': 'RAISE', 'T8s': 'RAISE', 'T7s': 'RAISE', 'T6s': 'RAISE', 'T5s': 'RAISE', 'T4s': 'RAISE', 'T3s': 'RAISE', 'T2s': 'RAISE',
+                'T9o': 'RAISE', 'T8o': 'RAISE', 'T7o': 'RAISE', 'T6o': 'RAISE', 'T5o': 'RAISE', 'T4o': 'RAISE', 'T3o': 'RAISE', 'T2o': 'RAISE',
+                '98s': 'RAISE', '97s': 'RAISE', '96s': 'RAISE', '95s': 'RAISE', '94s': 'RAISE', '93s': 'RAISE', '92s': 'RAISE',
+                '98o': 'RAISE', '97o': 'RAISE', '96o': 'RAISE', '95o': 'RAISE', '94o': 'RAISE', '93o': 'RAISE', '92o': 'RAISE',
+                '87s': 'RAISE', '86s': 'RAISE', '85s': 'RAISE', '84s': 'RAISE', '83s': 'RAISE', '82s': 'RAISE',
+                '87o': 'RAISE', '86o': 'RAISE', '85o': 'RAISE', '84o': 'RAISE', '83o': 'RAISE', '82o': 'RAISE',
+                '76s': 'RAISE', '75s': 'RAISE', '74s': 'RAISE', '73s': 'RAISE', '72s': 'RAISE',
+                '76o': 'RAISE', '75o': 'RAISE', '74o': 'RAISE', '73o': 'RAISE', '72o': 'RAISE',
+                '65s': 'RAISE', '64s': 'RAISE', '63s': 'RAISE', '62s': 'RAISE',
+                '65o': 'RAISE', '64o': 'RAISE', '63o': 'RAISE', '62o': 'RAISE',
                 '54s': 'RAISE', '53s': 'RAISE', '52s': 'RAISE',
-                '54o': 'RAISE', '53o': 'RAISE'
+                '54o': 'RAISE', '53o': 'RAISE', '52o': 'RAISE',
+                '43s': 'RAISE', '42s': 'RAISE',
+                '43o': 'RAISE', '42o': 'RAISE',
+                '32s': 'RAISE',
+                '32o': 'RAISE'
+            },
+            'BB': {  # Big Blind (heads up) - tighter range for calling
+                'AA': 'RAISE', 'KK': 'RAISE', 'QQ': 'RAISE', 'JJ': 'RAISE', 'TT': 'RAISE', '99': 'RAISE', '88': 'RAISE', '77': 'RAISE', '66': 'RAISE', '55': 'RAISE', '44': 'RAISE', '33': 'RAISE', '22': 'RAISE',
+                'AKs': 'RAISE', 'AQs': 'RAISE', 'AJs': 'RAISE', 'ATs': 'RAISE', 'A9s': 'RAISE', 'A8s': 'RAISE', 'A7s': 'RAISE', 'A6s': 'RAISE', 'A5s': 'RAISE', 'A4s': 'RAISE', 'A3s': 'RAISE', 'A2s': 'RAISE',
+                'AKo': 'RAISE', 'AQo': 'RAISE', 'AJo': 'RAISE', 'ATo': 'RAISE', 'A9o': 'RAISE', 'A8o': 'RAISE', 'A7o': 'RAISE', 'A6o': 'RAISE', 'A5o': 'RAISE', 'A4o': 'RAISE', 'A3o': 'RAISE', 'A2o': 'RAISE',
+                'KQs': 'RAISE', 'KJs': 'RAISE', 'KTs': 'RAISE', 'K9s': 'RAISE', 'K8s': 'RAISE', 'K7s': 'RAISE', 'K6s': 'RAISE', 'K5s': 'RAISE', 'K4s': 'RAISE', 'K3s': 'RAISE', 'K2s': 'RAISE',
+                'KQo': 'RAISE', 'KJo': 'RAISE', 'KTo': 'RAISE', 'K9o': 'RAISE', 'K8o': 'RAISE', 'K7o': 'RAISE', 'K6o': 'RAISE', 'K5o': 'RAISE', 'K4o': 'RAISE', 'K3o': 'RAISE', 'K2o': 'RAISE',
+                'QJs': 'RAISE', 'QTs': 'RAISE', 'Q9s': 'RAISE', 'Q8s': 'RAISE', 'Q7s': 'RAISE', 'Q6s': 'RAISE', 'Q5s': 'RAISE', 'Q4s': 'RAISE', 'Q3s': 'RAISE', 'Q2s': 'RAISE',
+                'QJo': 'RAISE', 'QTo': 'RAISE', 'Q9o': 'RAISE', 'Q8o': 'RAISE', 'Q7o': 'RAISE', 'Q6o': 'RAISE', 'Q5o': 'RAISE', 'Q4o': 'RAISE', 'Q3o': 'RAISE', 'Q2o': 'RAISE',
+                'JTs': 'RAISE', 'J9s': 'RAISE', 'J8s': 'RAISE', 'J7s': 'RAISE', 'J6s': 'RAISE', 'J5s': 'RAISE', 'J4s': 'RAISE', 'J3s': 'RAISE', 'J2s': 'RAISE',
+                'JTo': 'RAISE', 'J9o': 'RAISE', 'J8o': 'RAISE', 'J7o': 'RAISE', 'J6o': 'RAISE', 'J5o': 'RAISE', 'J4o': 'RAISE', 'J3o': 'RAISE', 'J2o': 'RAISE',
+                'T9s': 'RAISE', 'T8s': 'RAISE', 'T7s': 'RAISE', 'T6s': 'RAISE', 'T5s': 'RAISE', 'T4s': 'RAISE', 'T3s': 'RAISE', 'T2s': 'RAISE',
+                'T9o': 'RAISE', 'T8o': 'RAISE', 'T7o': 'RAISE', 'T6o': 'RAISE', 'T5o': 'RAISE', 'T4o': 'RAISE', 'T3o': 'RAISE', 'T2o': 'RAISE',
+                '98s': 'RAISE', '97s': 'RAISE', '96s': 'RAISE', '95s': 'RAISE', '94s': 'RAISE', '93s': 'RAISE', '92s': 'RAISE',
+                '98o': 'RAISE', '97o': 'RAISE', '96o': 'RAISE', '95o': 'RAISE', '94o': 'RAISE', '93o': 'RAISE', '92o': 'RAISE',
+                '87s': 'RAISE', '86s': 'RAISE', '85s': 'RAISE', '84s': 'RAISE', '83s': 'RAISE', '82s': 'RAISE',
+                '87o': 'RAISE', '86o': 'RAISE', '85o': 'RAISE', '84o': 'RAISE', '83o': 'RAISE', '82o': 'RAISE',
+                '76s': 'RAISE', '75s': 'RAISE', '74s': 'RAISE', '73s': 'RAISE', '72s': 'RAISE',
+                '76o': 'RAISE', '75o': 'RAISE', '74o': 'RAISE', '73o': 'RAISE', '72o': 'RAISE',
+                '65s': 'RAISE', '64s': 'RAISE', '63s': 'RAISE', '62s': 'RAISE',
+                '65o': 'RAISE', '64o': 'RAISE', '63o': 'RAISE', '62o': 'RAISE',
+                '54s': 'RAISE', '53s': 'RAISE', '52s': 'RAISE',
+                '54o': 'RAISE', '53o': 'RAISE', '52o': 'RAISE',
+                '43s': 'RAISE', '42s': 'RAISE',
+                '43o': 'RAISE', '42o': 'RAISE',
+                '32s': 'RAISE',
+                '32o': 'RAISE'
             }
         }
     
@@ -734,7 +755,7 @@ def preflop_action():
     """tells you what to do preflop"""
     try:
         data = request.json
-        position = data.get('position', 'BTN')
+        position = data.get('position', 'SB')
         hole_cards_str = data.get('hole_cards', [])
         
         if len(hole_cards_str) != 2:
@@ -759,7 +780,7 @@ def analyze_hand():
         data = request.json
         hero_hand_str = data.get('hero_hand', [])
         board_str = data.get('board', [])
-        position = data.get('position', 'BTN')
+        position = data.get('position', 'SB')
         pot_size = data.get('pot_size', 0)
         current_bet = data.get('current_bet', 0)
         
@@ -783,9 +804,9 @@ def analyze_hand():
             else:
                 best_hand = {'hand_type': 'incomplete', 'strength': 0}
         else:
-            # Preflop analysis - calculate hand strength as percentile
-            hand_percentile = _calculate_hand_percentile(hero_hand)
-            best_hand = {'hand_type': 'preflop', 'strength': hand_percentile}
+            # Preflop analysis - calculate hand strength by simulation
+            hand_strength = _calculate_hand_strength_simulation(hero_hand)
+            best_hand = {'hand_type': 'preflop', 'strength': hand_strength}
         
         # Get preflop recommendation
         preflop_action = preflop_strategy.get_preflop_action(position, hero_hand) if len(board) == 0 else 'POSTFLOP'
@@ -807,6 +828,148 @@ def analyze_hand():
     
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+def _get_hand_cards(hand_notation: str, excluded_cards: List[Card]) -> List[Card]:
+    """Get specific cards for a hand notation, avoiding excluded cards"""
+    if len(hand_notation) < 2:
+        return []
+    
+    # create a deck excluding the specified cards
+    deck = equity_calculator._create_deck(excluded_cards, [])
+    
+    if len(hand_notation) == 2:  # pair like "AA"
+        rank = hand_notation[0]
+        cards = []
+        for suit in ['s', 'h', 'd', 'c']:
+            card_str = f"{rank}{suit}"
+            card = Card(card_str)
+            if card not in excluded_cards:
+                cards.append(card)
+        return cards[:2] if len(cards) >= 2 else []
+    
+    elif hand_notation.endswith('s'):  # suited like "AKs"
+        rank1, rank2 = hand_notation[0], hand_notation[1]
+        # find a suit that works for both cards
+        for suit in ['s', 'h', 'd', 'c']:
+            card1_str = f"{rank1}{suit}"
+            card2_str = f"{rank2}{suit}"
+            card1, card2 = Card(card1_str), Card(card2_str)
+            if card1 not in excluded_cards and card2 not in excluded_cards:
+                return [card1, card2]
+        return []
+    
+    elif hand_notation.endswith('o'):  # offsuit like "AKo"
+        rank1, rank2 = hand_notation[0], hand_notation[1]
+        # find two different suits
+        suits = ['s', 'h', 'd', 'c']
+        for suit1 in suits:
+            for suit2 in suits:
+                if suit1 != suit2:
+                    card1_str = f"{rank1}{suit1}"
+                    card2_str = f"{rank2}{suit2}"
+                    card1, card2 = Card(card1_str), Card(card2_str)
+                    if card1 not in excluded_cards and card2 not in excluded_cards:
+                        return [card1, card2]
+        return []
+    
+    return []
+
+def _calculate_hand_strength_simulation(hero_hand: List[Card]) -> float:
+    """Calculate hand strength by simulating against all possible starting hands"""
+    if len(hero_hand) != 2:
+        return 0.0
+    
+    # All possible starting hands (169 total)
+    all_hands = [
+        'AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55', '44', '33', '22',
+        'AKs', 'AQs', 'AJs', 'ATs', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s',
+        'KQs', 'KJs', 'KTs', 'K9s', 'K8s', 'K7s', 'K6s', 'K5s', 'K4s', 'K3s', 'K2s',
+        'QJs', 'QTs', 'Q9s', 'Q8s', 'Q7s', 'Q6s', 'Q5s', 'Q4s', 'Q3s', 'Q2s',
+        'JTs', 'J9s', 'J8s', 'J7s', 'J6s', 'J5s', 'J4s', 'J3s', 'J2s',
+        'T9s', 'T8s', 'T7s', 'T6s', 'T5s', 'T4s', 'T3s', 'T2s',
+        '98s', '97s', '96s', '95s', '94s', '93s', '92s',
+        '87s', '86s', '85s', '84s', '83s', '82s',
+        '76s', '75s', '74s', '73s', '72s',
+        '65s', '64s', '63s', '62s',
+        '54s', '53s', '52s',
+        '43s', '42s',
+        '32s',
+        'AKo', 'AQo', 'AJo', 'ATo', 'A9o', 'A8o', 'A7o', 'A6o', 'A5o', 'A4o', 'A3o', 'A2o',
+        'KQo', 'KJo', 'KTo', 'K9o', 'K8o', 'K7o', 'K6o', 'K5o', 'K4o', 'K3o', 'K2o',
+        'QJo', 'QTo', 'Q9o', 'Q8o', 'Q7o', 'Q6o', 'Q5o', 'Q4o', 'Q3o', 'Q2o',
+        'JTo', 'J9o', 'J8o', 'J7o', 'J6o', 'J5o', 'J4o', 'J3o', 'J2o',
+        'T9o', 'T8o', 'T7o', 'T6o', 'T5o', 'T4o', 'T3o', 'T2o',
+        '98o', '97o', '96o', '95o', '94o', '93o', '92o',
+        '87o', '86o', '85o', '84o', '83o', '82o',
+        '76o', '74o', '73o', '72o',
+        '65o', '64o', '63o', '62o',
+        '54o', '53o', '52o',
+        '43o', '42o',
+        '32o'
+    ]
+    
+    wins = 0
+    total_comparisons = 0
+    simulations_per_hand = 100  # reduced from 400 for performance
+    
+    # get hero hand notation
+    card1, card2 = hero_hand
+    if card1.value == card2.value:
+        hero_notation = f"{card1.rank}{card2.rank}"
+    elif card1.suit == card2.suit:
+        if card1.value > card2.value:
+            hero_notation = f"{card1.rank}{card2.rank}s"
+        else:
+            hero_notation = f"{card2.rank}{card1.rank}s"
+    else:
+        if card1.value > card2.value:
+            hero_notation = f"{card1.rank}{card2.rank}o"
+        else:
+            hero_notation = f"{card2.rank}{card1.rank}o"
+    
+    # skip if hero hand is not in our list
+    if hero_notation not in all_hands:
+        return 0.0
+    
+    # simulate against every other hand
+    for opponent_hand in all_hands:
+        if opponent_hand == hero_notation:
+            continue
+            
+        # run simulations for this matchup
+        for _ in range(simulations_per_hand):
+            # create a random board (5 cards)
+            deck = equity_calculator._create_deck([hero_hand[0], hero_hand[1]], [])
+            board = []
+            
+            # deal 5 board cards
+            for _ in range(5):
+                if deck:
+                    board.append(deck.pop(random.randint(0, len(deck) - 1)))
+            
+            # get opponent's specific cards for this hand type
+            opponent_cards = _get_hand_cards(opponent_hand, [hero_hand[0], hero_hand[1]] + board)
+            if not opponent_cards:
+                continue
+                
+            # evaluate both hands
+            hero_best = equity_calculator._get_best_hand(hero_hand, board)
+            opponent_best = equity_calculator._get_best_hand(opponent_cards, board)
+            
+            # compare hands
+            comparison = equity_calculator._compare_hands(hero_best, opponent_best, hero_hand, opponent_cards, board)
+            if comparison > 0:
+                wins += 1
+            elif comparison == 0:
+                wins += 0.5  # tie
+                
+            total_comparisons += 1
+    
+    if total_comparisons == 0:
+        return 0.0
+        
+    win_rate = wins / total_comparisons
+    return round(win_rate * 100, 1)
 
 def _calculate_hand_percentile(hero_hand: List[Card]) -> float:
     """Calculate hand strength as percentile (0-100) based on all possible hands"""

@@ -143,7 +143,7 @@ async function analyzeHand() {
                     <div class="strength-bar">
                         <div class="strength-fill" style="width: ${(result.hand_analysis.strength / 10) * 100}%"></div>
                     </div>
-                    <span class="value">${result.hand_analysis.strength}/10</span>
+                    <span class="value">${result.hand_analysis.strength}% Equity</span>
                 </div>
                 <p><strong>Hand Type:</strong> <span class="value">${result.hand_analysis.hand_type || 'Preflop'}</span></p>
                 <p><strong>Position:</strong> <span class="value">${result.position}</span></p>
