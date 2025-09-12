@@ -5,102 +5,139 @@ just a fun little poker tool i made to learn some poker math. nothing super fanc
 ## what it does
 
 - **hand evaluation**: figures out what kind of hand you have (pair, flush, etc.)
-- **equity calculation**: runs simulations to see how often you win against opponent ranges (low number for better calculations)
+- **equity calculation**: runs simulations to see how often you win against opponent ranges
 - **preflop strategy**: tells you whether to raise, call, or fold preflop
 - **hand analysis**: gives you a full breakdown of your situation
+- **range analysis**: categorizes opponent ranges and filters by board texture
 
 ## setup
 
 ### what you need
 - python 3.8+ (i used 3.12)
 
-### installation
+### quick start
 
 1. clone this repo or download the files
-2. go to the backend folder:
+2. run the simple launcher:
+   ```bash
+   ./start.sh
+   ```
+   this will automatically set up the virtual environment and start the server
+
+3. open the frontend:
+   - double-click `frontend/index.html` to open in your browser
+   - the server runs on http://localhost:5001
+
+### manual setup (if needed)
+
+1. go to the backend folder:
    ```bash
    cd backend
    ```
 
-3. create a virtual environment (optional but recommended):
+2. create a virtual environment:
    ```bash
    python3 -m venv venv
    source venv/bin/activate  # on mac/linux
-   # or on windows: venv\Scripts\activate
    ```
 
-4. install the requirements:
+3. install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-5. run the app:
+4. start the server:
    ```bash
-   python simple_app.py
+   python -m app.main
    ```
 
+## usage
 
-## how to use
+1. start the backend server (see setup above)
+2. open `frontend/index.html` in your browser
+3. enter your cards, position, and other info
+4. click the buttons to get analysis
 
-### web interface
-just open `frontend/index.html` in your browser. it's pretty self-explanatory - enter your cards, opponent range, board, etc.
+## project structure
 
-### api endpoints
-if you want to use the api directly:
+```
+elara/
+├── backend/
+│   ├── app/
+│   │   ├── main.py           # flask app entry point
+│   │   ├── api/
+│   │   │   └── routes.py     # all api endpoints
+│   │   └── poker/
+│   │       ├── card.py       # card representation
+│   │       ├── evaluator.py  # hand evaluation
+│   │       ├── equity.py     # equity calculation
+│   │       ├── strategy.py   # preflop strategy
+│   │       └── range_filter.py # range analysis
+│   ├── requirements.txt      # python dependencies
+│   └── venv/                 # virtual environment
+├── frontend/
+│   ├── index.html           # main web page
+│   ├── css/
+│   │   └── style.css        # styling
+│   └── js/
+│       ├── main.js          # main frontend logic
+│       ├── api.js           # api communication
+│       └── ui.js            # ui functions
+├── start.sh                 # simple launcher script
+└── README.md                # this file
+```
+
+## api endpoints
+
+the backend provides these endpoints:
 
 - `GET /health` - check if server is running
+- `POST /evaluate_hand` - evaluate a poker hand
 - `POST /calculate_equity` - calculate equity against opponent range
 - `POST /preflop_action` - get preflop recommendation
 - `POST /analyze_hand` - full hand analysis
+- `POST /partition_range` - categorize opponent's range
+- `POST /dynamic_range` - filter range based on board
 
-### example api call
+## example usage
+
+### hand evaluation
 ```bash
-curl -X POST http://localhost:5000/calculate_equity \
+curl -X POST http://localhost:5001/evaluate_hand \
+  -H "Content-Type: application/json" \
+  -d '{"cards": ["As", "Kh", "Qd", "Jc", "Ts"]}'
+```
+
+### equity calculation
+```bash
+curl -X POST http://localhost:5001/calculate_equity \
   -H "Content-Type: application/json" \
   -d '{
-    "hero_hand": ["As", "Ah"],
-    "villain_range": ["KK", "QQ"],
+    "hero_hand": ["As", "Kh"],
+    "villain_range": ["AA", "KK", "QQ"],
     "board": [],
     "simulations": 1000
   }'
 ```
 
-## card format
+## features
 
-cards are in the format `"As"`, `"Kh"`, `"7d"`, etc.
-- rank: 2-9 (including 6, 7), T, J, Q, K, A
-- suit: s (spades), h (hearts), d (diamonds), c (clubs)
-
-## opponent ranges
-
-you can specify ranges like:
-- `["AA", "KK", "QQ"]` - specific hands
-- `["AKs", "AKo"]` - suited and offsuit
-- `[]` - uses default top 25% range
-- this is missing a bit
+- **hand evaluation**: figures out what kind of hand you have
+- **equity calculation**: monte carlo simulation against opponent ranges
+- **preflop strategy**: realistic heads-up charts with dynamic blending
+- **range analysis**: categorizes opponent ranges and filters by board texture
+- **hand analysis**: comprehensive breakdown with recommendations
 
 ## notes
 
-- the equity calculation runs 1000 simulations by default, so it might take a second
-  - currently also very inefficient since it will run against every hand in the range (i will update this later)
-- the preflop charts are simplified but should be decent for most situations
-- this is just for learning/fun, use at your own risk lol although it's strictly heads up for now and heads up ranges are also notably different
+- this is just for learning, don't use it for real money decisions
+- the equity calculations use monte carlo simulation for accuracy
+- the preflop strategy blends human charts with calculated risk
+- feel free to improve it or add more features
 
 ## troubleshooting
 
-if you get import errors, make sure you're in the virtual environment and have installed the requirements.
-
-if the server won't start, make sure port 5000 isn't being used by something else.
-
-## files
-
-- `backend/simple_app.py` - main flask app (everything is in here)
-- `frontend/index.html` - web interface
-- `frontend/js/main.js` - frontend javascript
-- `frontend/css/style.css` - styling
-- `backend/requirements.txt` - python dependencies
-- `setup.sh` - setup script
-- `start_elara.sh` - launcher script
-- `create_mac_app.sh` - creates a mac app bundle
-
-that's it! have fun and don't go broke playing poker :) (always play 67o)
+- make sure python 3.8+ is installed
+- if you get import errors, make sure you're in the virtual environment
+- if the server won't start, check that port 5001 isn't already in use
+- if the frontend won't load, make sure the backend is running first
