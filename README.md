@@ -58,35 +58,6 @@ just a fun little poker tool i made to learn some poker math. nothing super fanc
 3. enter your cards, position, and other info
 4. click the buttons to get analysis
 
-## project structure
-
-```
-elara/
-├── backend/
-│   ├── app/
-│   │   ├── main.py           # flask app entry point
-│   │   ├── api/
-│   │   │   └── routes.py     # all api endpoints
-│   │   └── poker/
-│   │       ├── card.py       # card representation
-│   │       ├── evaluator.py  # hand evaluation
-│   │       ├── equity.py     # equity calculation
-│   │       ├── strategy.py   # preflop strategy
-│   │       └── range_filter.py # range analysis
-│   ├── requirements.txt      # python dependencies
-│   └── venv/                 # virtual environment
-├── frontend/
-│   ├── index.html           # main web page
-│   ├── css/
-│   │   └── style.css        # styling
-│   └── js/
-│       ├── main.js          # main frontend logic
-│       ├── api.js           # api communication
-│       └── ui.js            # ui functions
-├── start.sh                 # simple launcher script
-└── README.md                # this file
-```
-
 ## api endpoints
 
 the backend provides these endpoints:
@@ -99,31 +70,10 @@ the backend provides these endpoints:
 - `POST /partition_range` - categorize opponent's range
 - `POST /dynamic_range` - filter range based on board
 
-## example usage
-
-### hand evaluation
-```bash
-curl -X POST http://localhost:5001/evaluate_hand \
-  -H "Content-Type: application/json" \
-  -d '{"cards": ["As", "Kh", "Qd", "Jc", "Ts"]}'
-```
-
-### equity calculation
-```bash
-curl -X POST http://localhost:5001/calculate_equity \
-  -H "Content-Type: application/json" \
-  -d '{
-    "hero_hand": ["As", "Kh"],
-    "villain_range": ["AA", "KK", "QQ"],
-    "board": [],
-    "simulations": 1000
-  }'
-```
-
 ## features
 
 - **hand evaluation**: figures out what kind of hand you have
-- **equity calculation**: monte carlo simulation against opponent ranges
+- **equity calculation**: simulation against opponent ranges
 - **preflop strategy**: realistic heads-up charts with dynamic blending
 - **range analysis**: categorizes opponent ranges and filters by board texture
 - **hand analysis**: comprehensive breakdown with recommendations
