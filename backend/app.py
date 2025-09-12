@@ -4,12 +4,16 @@ from elara.engine.card import Card
 from elara.engine.game_state import GameState, Position, Action, Street
 from elara.utils.hand_evaluator import ElaraHandEvaluator
 from elara.giffer.range_handler import Range
+from elara.gto.strategy import GtoStrategy
+from elara.engine.player_profile import OpponentModeler
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend communication
 
 # Initialize Elara components
 hand_evaluator = ElaraHandEvaluator()
+gto_strategy = GtoStrategy()
+opponent_modeler = OpponentModeler()
 
 @app.route('/evaluate_hand', methods=['POST'])
 def evaluate_hand_route():
@@ -24,6 +28,7 @@ def evaluate_hand_route():
         "villain_position": "big_blind",
         "pot_size": 10,
         "current_bet": 5,
+        "opponent_name": "player123",
         "action_history": [
             {"player": "villain", "action": "raise", "amount": 3, "street": "preflop"},
             {"player": "hero", "action": "call", "amount": 3, "street": "preflop"},
@@ -91,8 +96,11 @@ def evaluate_hand_route():
             
             game_state.add_action(player, action, amount, street)
         
-        # Evaluate the hand
-        evaluation = hand_evaluator.evaluate_hand(hero_hand, game_state)
+        # Get opponent name for dynamic modeling
+        opponent_name = data.get('opponent_name')
+        
+        # Evaluate the hand with enhanced features
+        evaluation = hand_evaluator.evaluate_hand(hero_hand, game_state, opponent_name=opponent_name)
         
         return jsonify(evaluation)
         
@@ -192,6 +200,190 @@ def calculate_equity_route():
             'opponent_range': opponent_hands,
             'board': data.get('board', []),
             'equity': equity
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/monte_carlo_equity', methods=['POST'])
+def monte_carlo_equity_route():
+    """
+    Calculate equity using Monte Carlo simulation.
+    
+    Expected JSON:
+    {
+        "hero_hand": ["As", "Kh"],
+        "opponent_range": "AA,KK,QQ,AKs,AQs",
+        "board": ["Ah", "7d", "2c"],
+        "num_simulations": 5000
+    }
+    """
+    try:
+        data = request.json
+        
+        # Parse hero's hand
+        hero_hand = [Card(card_str) for card_str in data.get('hero_hand', [])]
+        
+        # Parse board
+        board = [Card(card_str) for card_str in data.get('board', [])]
+        
+        # Get opponent range and simulation count
+        opponent_range = data.get('opponent_range', '')
+        num_simulations = data.get('num_simulations', 5000)
+        
+        # Calculate Monte Carlo equity
+        equity = hand_evaluator.equity_calculator.monte_carlo_equity(
+            hero_hand, opponent_range, board, num_simulations
+        )
+        
+        return jsonify({
+            'hero_hand': data.get('hero_hand'),
+            'opponent_range': opponent_range,
+            'board': data.get('board', []),
+            'equity': equity,
+            'num_simulations': num_simulations
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/partition_range', methods=['POST'])
+def partition_range_route():
+    """
+    Partition an opponent's range into strategic categories.
+    
+    Expected JSON:
+    {
+        "opponent_range": "AA,KK,QQ,AKs,AQs",
+        "board": ["Ah", "7d", "2c"]
+    }
+    """
+    try:
+        data = request.json
+        
+        # Parse board
+        board = [Card(card_str) for card_str in data.get('board', [])]
+        
+        # Get opponent range
+        opponent_range = data.get('opponent_range', '')
+        
+        # Create range object and partition
+        range_obj = Range.from_hand_list(opponent_range.split(','))
+        partitions = range_obj.partition_range(opponent_range, board)
+        
+        return jsonify({
+            'opponent_range': opponent_range,
+            'board': data.get('board', []),
+            'partitions': partitions
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/gto_preflop_action', methods=['POST'])
+def gto_preflop_action_route():
+    """
+    Get GTO-based pre-flop action recommendation.
+    
+    Expected JSON:
+    {
+        "position": "BTN",
+        "hole_cards": ["As", "Kh"]
+    }
+    """
+    try:
+        data = request.json
+        
+        # Parse hole cards
+        hole_cards = [Card(card_str) for card_str in data.get('hole_cards', [])]
+        
+        # Get position and action
+        position = data.get('position', 'BB')
+        action = gto_strategy.get_preflop_action(position, hole_cards)
+        
+        # Get range coverage
+        range_coverage = gto_strategy.get_range_coverage(position, 'open')
+        
+        return jsonify({
+            'position': position,
+            'hole_cards': data.get('hole_cards'),
+            'action': action,
+            'range_coverage': range_coverage
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/update_player_stats', methods=['POST'])
+def update_player_stats_route():
+    """
+    Update player statistics for opponent modeling.
+    
+    Expected JSON:
+    {
+        "player_name": "player123",
+        "did_vpip": true,
+        "did_pfr": true,
+        "postflop_actions": ["BET", "CALL", "RAISE"]
+    }
+    """
+    try:
+        data = request.json
+        
+        player_name = data.get('player_name')
+        did_vpip = data.get('did_vpip', False)
+        did_pfr = data.get('did_pfr', False)
+        postflop_actions = data.get('postflop_actions', [])
+        
+        # Update player statistics
+        opponent_modeler.update_player_stats(player_name, did_vpip, did_pfr, postflop_actions)
+        
+        # Get updated profile
+        profile = opponent_modeler.get_player_tendencies(player_name)
+        
+        return jsonify({
+            'player_name': player_name,
+            'profile': profile,
+            'message': 'Statistics updated successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/get_player_profile', methods=['GET'])
+def get_player_profile_route():
+    """
+    Get player profile and tendencies.
+    
+    Query parameters:
+    - player_name: Name of the player
+    """
+    try:
+        player_name = request.args.get('player_name')
+        
+        if not player_name:
+            return jsonify({'error': 'player_name parameter is required'}), 400
+        
+        # Get player profile
+        profile = opponent_modeler.get_player_tendencies(player_name)
+        
+        return jsonify({
+            'player_name': player_name,
+            'profile': profile
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@app.route('/get_all_profiles', methods=['GET'])
+def get_all_profiles_route():
+    """Get all player profiles."""
+    try:
+        profiles = opponent_modeler.get_all_profiles()
+        
+        return jsonify({
+            'profiles': profiles,
+            'total_players': len(profiles)
         })
         
     except Exception as e:

@@ -1,23 +1,143 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Elara - Texas Hold'em Bot</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>elara poker calculator</title>
     <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>Elara - Poker Bot</h1>
-    <div class="phase-display" id="phaseDisplay"></div>
-    <div id="community" class="card-container"></div>
-    <hr>
-    <h3>Bot Hand</h3>
-    <div id="bot" class="card-container"></div>
-    <hr>
-    <h3>Your Hand</h3>
-    <div id="player" class="card-container"></div>
-    <div id="controls"></div>
-    <div id="status"></div>
-    <button id="nextHandBtn" onclick="startNewHand()">Next Hand</button>
+    <div class="container">
+        <header class="header">
+            <h1>Elara</h1>
+            <p>texas hold'em heads up poker analysis</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Hand Analysis Section -->
+            <section class="analysis-section">
+                <h2>hand analysis</h2>
+                <div class="input-group">
+                    <label for="heroHand">Your Hand (2 cards):</label>
+                    <input type="text" id="heroHand" placeholder="e.g., As Kh" value="As Kh">
+                </div>
+                
+                <div class="input-group">
+                    <label for="board">Board (0-5 cards):</label>
+                    <input type="text" id="board" placeholder="e.g., Ah 7d 2c" value="">
+                </div>
+                
+                <div class="input-group">
+                    <label for="position">Position:</label>
+                    <select id="position">
+                        <option value="BTN">Button</option>
+                        <option value="UTG">UTG</option>
+                        <option value="HJ">HJ</option>
+                        <option value="CO">CO</option>
+                        <option value="SB">SB</option>
+                        <option value="BB">BB</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="potSize">Pot Size:</label>
+                    <input type="number" id="potSize" placeholder="0" value="10">
+                </div>
+                
+                <div class="input-group">
+                    <label for="currentBet">Current Bet:</label>
+                    <input type="number" id="currentBet" placeholder="0" value="5">
+                </div>
+                
+                <button id="analyzeBtn" class="btn btn-primary">Analyze Hand</button>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section">
+                <h2>Analysis Results</h2>
+                <div id="results" class="results-container">
+                    <div class="placeholder">
+                        <p>Click "Analyze Hand" to see results</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Equity Calculator Section -->
+            <section class="equity-section">
+                <h2>equity calculator</h2>
+                <div class="input-group">
+                    <label for="equityHeroHand">Your Hand:</label>
+                    <input type="text" id="equityHeroHand" placeholder="e.g., As Kh" value="As Kh">
+                </div>
+                
+                <div class="input-group">
+                    <label for="villainRange">Opponent Range:</label>
+                    <input type="text" id="villainRange" placeholder="e.g., AA,KK,QQ,AKs,AQs" value="AA,KK,QQ,AKs,AQs">
+                </div>
+                
+                <div class="input-group">
+                    <label for="equityBoard">Board:</label>
+                    <input type="text" id="equityBoard" placeholder="e.g., Ah 7d 2c" value="">
+                </div>
+                
+                <div class="input-group">
+                    <label for="simulations">Simulations:</label>
+                    <input type="number" id="simulations" placeholder="1000" value="1000" min="100" max="10000">
+                </div>
+                
+                <button id="calculateEquityBtn" class="btn btn-secondary">Calculate Equity</button>
+            </section>
+
+            <!-- Equity Results -->
+            <section class="equity-results-section">
+                <h2>Equity Results</h2>
+                <div id="equityResults" class="results-container">
+                    <div class="placeholder">
+                        <p>Click "Calculate Equity" to see results</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Preflop Strategy Section -->
+            <section class="preflop-section">
+                <h2>preflop strategy</h2>
+                <div class="input-group">
+                    <label for="preflopPosition">Position:</label>
+                    <select id="preflopPosition">
+                        <option value="BTN">Button</option>
+                        <option value="UTG">UTG</option>
+                        <option value="HJ">HJ</option>
+                        <option value="CO">CO</option>
+                        <option value="SB">SB</option>
+                        <option value="BB">BB</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="preflopHoleCards">Hole Cards:</label>
+                    <input type="text" id="preflopHoleCards" placeholder="e.g., As Kh" value="As Kh">
+                </div>
+                
+                <button id="preflopBtn" class="btn btn-accent">Get Preflop Action</button>
+            </section>
+
+            <!-- Preflop Results -->
+            <section class="preflop-results-section">
+                <h2>Preflop Recommendation</h2>
+                <div id="preflopResults" class="results-container">
+                    <div class="placeholder">
+                        <p>Click "Get Preflop Action" to see recommendation</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer class="footer">
+            <p>Built with Flask and modern web technologies</p>
+            <p><a href="https://github.com/rjmsun" target="_blank" style="color: #667eea;">GitHub: rjmsun</a></p>
+        </footer>
+    </div>
 
     <script src="js/main.js"></script>
 </body>

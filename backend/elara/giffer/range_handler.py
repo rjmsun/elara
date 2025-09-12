@@ -20,8 +20,6 @@ class Range:
     
     def __init__(self, hand_weights=None):
         """
-        Initialize a range with optional hand weights.
-        
         Args:
             hand_weights: Dict mapping hand strings to weights (0.0 to 1.0)
         """
@@ -31,8 +29,6 @@ class Range:
     @classmethod
     def from_hand_list(cls, hands):
         """
-        Create a range from a list of hands (all weighted equally).
-        
         Args:
             hands: List of hand strings (e.g., ['AA', 'KK', 'AKs'])
             
@@ -56,172 +52,162 @@ class Range:
             Range object with realistic hand weights
         """
         if position == 'button' and action == 'raise':
-            # Button opening range (realistic GTO frequencies)
+            # Button opening range (realistic GTO frequencies for heads-up)
             weights = {
-                # Premium pairs (100% frequency)
+                # All pairs (100% frequency)
                 'AA': 1.0, 'KK': 1.0, 'QQ': 1.0, 'JJ': 1.0, 'TT': 1.0,
-                
-                # Medium pairs (100% frequency)
                 '99': 1.0, '88': 1.0, '77': 1.0, '66': 1.0, '55': 1.0, '44': 1.0, '33': 1.0, '22': 1.0,
                 
-                # Premium suited aces (100% frequency)
+                # All suited aces (100% frequency) 
                 'AKs': 1.0, 'AQs': 1.0, 'AJs': 1.0, 'ATs': 1.0, 'A9s': 1.0, 'A8s': 1.0, 'A7s': 1.0, 'A6s': 1.0, 'A5s': 1.0, 'A4s': 1.0, 'A3s': 1.0, 'A2s': 1.0,
                 
-                # Premium offsuit aces (100% frequency)
-                'AKo': 1.0, 'AQo': 1.0, 'AJo': 1.0, 'ATo': 1.0, 'A9o': 1.0, 'A8o': 1.0, 'A7o': 1.0, 'A6o': 1.0, 'A5o': 1.0, 'A4o': 1.0, 'A3o': 1.0, 'A2o': 1.0,
+                # Strong offsuit aces (most frequency)
+                'AKo': 1.0, 'AQo': 1.0, 'AJo': 1.0, 'ATo': 1.0, 'A9o': 1.0, 'A8o': 0.8, 'A7o': 0.6, 'A6o': 0.4, 'A5o': 0.6, 'A4o': 0.4, 'A3o': 0.4, 'A2o': 0.4,
                 
-                # Premium suited kings (100% frequency)
-                'KQs': 1.0, 'KJs': 1.0, 'KTs': 1.0, 'K9s': 1.0, 'K8s': 1.0, 'K7s': 1.0, 'K6s': 1.0, 'K5s': 1.0, 'K4s': 1.0, 'K3s': 1.0, 'K2s': 1.0,
+                # Suited kings (high frequency)
+                'KQs': 1.0, 'KJs': 1.0, 'KTs': 1.0, 'K9s': 1.0, 'K8s': 0.9, 'K7s': 0.8, 'K6s': 0.7, 'K5s': 0.7, 'K4s': 0.6, 'K3s': 0.6, 'K2s': 0.6,
                 
-                # Premium offsuit kings (100% frequency)
-                'KQo': 1.0, 'KJo': 1.0, 'KTo': 1.0, 'K9o': 1.0, 'K8o': 1.0, 'K7o': 1.0, 'K6o': 1.0, 'K5o': 1.0, 'K4o': 1.0, 'K3o': 1.0, 'K2o': 1.0,
+                # Strong offsuit kings (mixed frequency)
+                'KQo': 1.0, 'KJo': 1.0, 'KTo': 0.9, 'K9o': 0.7, 'K8o': 0.5, 'K7o': 0.3, 'K6o': 0.2, 'K5o': 0.2,
                 
-                # Suited broadways (100% frequency)
-                'QJs': 1.0, 'QTs': 1.0, 'Q9s': 1.0, 'Q8s': 1.0, 'Q7s': 1.0, 'Q6s': 1.0, 'Q5s': 1.0, 'Q4s': 1.0, 'Q3s': 1.0, 'Q2s': 1.0,
+                # Suited queens (high frequency for strong ones)
+                'QJs': 1.0, 'QTs': 1.0, 'Q9s': 0.9, 'Q8s': 0.8, 'Q7s': 0.7, 'Q6s': 0.6, 'Q5s': 0.5, 'Q4s': 0.4,
                 
-                # Offsuit broadways (100% frequency)
-                'QJo': 1.0, 'QTo': 1.0, 'Q9o': 1.0, 'Q8o': 1.0, 'Q7o': 1.0, 'Q6o': 1.0, 'Q5o': 1.0, 'Q4o': 1.0, 'Q3o': 1.0, 'Q2o': 1.0,
+                # Strong offsuit queens (mixed frequency)
+                'QJo': 1.0, 'QTo': 0.9, 'Q9o': 0.6, 'Q8o': 0.4, 'Q7o': 0.2,
                 
-                # Suited jacks (100% frequency)
-                'JTs': 1.0, 'J9s': 1.0, 'J8s': 1.0, 'J7s': 1.0, 'J6s': 1.0, 'J5s': 1.0, 'J4s': 1.0, 'J3s': 1.0, 'J2s': 1.0,
+                # Suited jacks (good connectivity)
+                'JTs': 1.0, 'J9s': 1.0, 'J8s': 0.9, 'J7s': 0.8, 'J6s': 0.6, 'J5s': 0.5, 'J4s': 0.4,
                 
-                # Offsuit jacks (100% frequency)
-                'JTo': 1.0, 'J9o': 1.0, 'J8o': 1.0, 'J7o': 1.0, 'J6o': 1.0, 'J5o': 1.0, 'J4o': 1.0, 'J3o': 1.0, 'J2o': 1.0,
+                # Strong offsuit jacks
+                'JTo': 1.0, 'J9o': 0.8, 'J8o': 0.5, 'J7o': 0.3,
                 
-                # Suited tens (100% frequency)
-                'T9s': 1.0, 'T8s': 1.0, 'T7s': 1.0, 'T6s': 1.0, 'T5s': 1.0, 'T4s': 1.0, 'T3s': 1.0, 'T2s': 1.0,
+                # Suited tens (connectors and strong)
+                'T9s': 1.0, 'T8s': 1.0, 'T7s': 0.9, 'T6s': 0.8, 'T5s': 0.7, 'T4s': 0.5,
                 
-                # Offsuit tens (100% frequency)
-                'T9o': 1.0, 'T8o': 1.0, 'T7o': 1.0, 'T6o': 1.0, 'T5o': 1.0, 'T4o': 1.0, 'T3o': 1.0, 'T2o': 1.0,
+                # Strong offsuit tens
+                'T9o': 0.9, 'T8o': 0.7, 'T7o': 0.4,
                 
-                # Suited connectors (100% frequency)
-                '98s': 1.0, '97s': 1.0, '96s': 1.0, '95s': 1.0, '94s': 1.0, '93s': 1.0, '92s': 1.0,
-                '87s': 1.0, '86s': 1.0, '85s': 1.0, '84s': 1.0, '83s': 1.0, '82s': 1.0,
-                '76s': 1.0, '75s': 1.0, '74s': 1.0, '73s': 1.0, '72s': 1.0,
-                '65s': 1.0, '64s': 1.0, '63s': 1.0, '62s': 1.0,
-                '54s': 1.0, '53s': 1.0, '52s': 1.0,
-                '43s': 1.0, '42s': 1.0,
-                '32s': 1.0,
+                # Suited connectors and one-gappers
+                '98s': 1.0, '97s': 0.9, '96s': 0.7, '95s': 0.5,
+                '87s': 1.0, '86s': 0.8, '85s': 0.6,
+                '76s': 1.0, '75s': 0.7,
+                '65s': 1.0, '64s': 0.6,
+                '54s': 1.0, '53s': 0.5,
+                '43s': 0.8,
                 
-                # Offsuit connectors (100% frequency)
-                '98o': 1.0, '97o': 1.0, '96o': 1.0, '95o': 1.0, '94o': 1.0, '93o': 1.0, '92o': 1.0,
-                '87o': 1.0, '86o': 1.0, '85o': 1.0, '84o': 1.0, '83o': 1.0, '82o': 1.0,
-                '76o': 1.0, '75o': 1.0, '74o': 1.0, '73o': 1.0, '72o': 1.0,
-                '65o': 1.0, '64o': 1.0, '63o': 1.0, '62o': 1.0,
-                '54o': 1.0, '53o': 1.0, '52o': 1.0,
-                '43o': 1.0, '42o': 1.0,
-                '32o': 1.0,
+                # Strong offsuit connectors (very selective)
+                '98o': 0.7, '97o': 0.4,
+                '87o': 0.6,
+                '76o': 0.5,
+                '65o': 0.4,
             }
             
         elif position == 'big_blind' and action == 'defend':
-            # Big blind defending range vs button 3bb raise (realistic GTO frequencies)
-            # This is a much tighter range that would actually defend vs a 3bb raise
+            # Big blind defending range vs button raise (realistic GTO frequencies)
+            # Tighter than button opening but still wide enough for heads-up
             weights = {
-                # Premium pairs (100% frequency)
+                # All pairs (high frequency)
                 'AA': 1.0, 'KK': 1.0, 'QQ': 1.0, 'JJ': 1.0, 'TT': 1.0, '99': 1.0, '88': 1.0, '77': 1.0, '66': 1.0, '55': 1.0, '44': 1.0, '33': 1.0, '22': 1.0,
                 
-                # Premium suited aces (100% frequency)
+                # All suited aces (high frequency)
                 'AKs': 1.0, 'AQs': 1.0, 'AJs': 1.0, 'ATs': 1.0, 'A9s': 1.0, 'A8s': 1.0, 'A7s': 1.0, 'A6s': 1.0, 'A5s': 1.0, 'A4s': 1.0, 'A3s': 1.0, 'A2s': 1.0,
                 
-                # Premium offsuit aces (100% frequency)
-                'AKo': 1.0, 'AQo': 1.0, 'AJo': 1.0, 'ATo': 1.0, 'A9o': 1.0, 'A8o': 1.0, 'A7o': 1.0, 'A6o': 1.0, 'A5o': 1.0, 'A4o': 1.0, 'A3o': 1.0, 'A2o': 1.0,
+                # Strong offsuit aces (mixed frequency)
+                'AKo': 1.0, 'AQo': 1.0, 'AJo': 1.0, 'ATo': 1.0, 'A9o': 0.8, 'A8o': 0.6, 'A7o': 0.5, 'A6o': 0.4, 'A5o': 0.5, 'A4o': 0.4, 'A3o': 0.4, 'A2o': 0.4,
                 
-                # Premium suited kings (100% frequency)
-                'KQs': 1.0, 'KJs': 1.0, 'KTs': 1.0, 'K9s': 1.0, 'K8s': 1.0, 'K7s': 1.0, 'K6s': 1.0, 'K5s': 1.0, 'K4s': 1.0, 'K3s': 1.0, 'K2s': 1.0,
+                # Suited kings (good frequency)
+                'KQs': 1.0, 'KJs': 1.0, 'KTs': 1.0, 'K9s': 0.9, 'K8s': 0.8, 'K7s': 0.7, 'K6s': 0.6, 'K5s': 0.6, 'K4s': 0.5, 'K3s': 0.5, 'K2s': 0.5,
                 
-                # Premium offsuit kings (100% frequency)
-                'KQo': 1.0, 'KJo': 1.0, 'KTo': 1.0, 'K9o': 1.0, 'K8o': 1.0, 'K7o': 1.0, 'K6o': 1.0, 'K5o': 1.0, 'K4o': 1.0, 'K3o': 1.0, 'K2o': 1.0,
+                # Offsuit kings (more selective)
+                'KQo': 1.0, 'KJo': 1.0, 'KTo': 0.8, 'K9o': 0.6, 'K8o': 0.4, 'K7o': 0.3, 'K6o': 0.2, 'K5o': 0.2,
                 
-                # Suited broadways (100% frequency)
-                'QJs': 1.0, 'QTs': 1.0, 'Q9s': 1.0, 'Q8s': 1.0, 'Q7s': 1.0, 'Q6s': 1.0, 'Q5s': 1.0, 'Q4s': 1.0, 'Q3s': 1.0, 'Q2s': 1.0,
+                # Suited queens (good connectivity)
+                'QJs': 1.0, 'QTs': 1.0, 'Q9s': 0.8, 'Q8s': 0.7, 'Q7s': 0.6, 'Q6s': 0.5, 'Q5s': 0.4, 
                 
-                # Offsuit broadways (100% frequency)
-                'QJo': 1.0, 'QTo': 1.0, 'Q9o': 1.0, 'Q8o': 1.0, 'Q7o': 1.0, 'Q6o': 1.0, 'Q5o': 1.0, 'Q4o': 1.0, 'Q3o': 1.0, 'Q2o': 1.0,
+                # Offsuit queens (selective)
+                'QJo': 1.0, 'QTo': 0.8, 'Q9o': 0.5, 'Q8o': 0.3, 'Q7o': 0.2,
                 
-                # Suited jacks (100% frequency)
-                'JTs': 1.0, 'J9s': 1.0, 'J8s': 1.0, 'J7s': 1.0, 'J6s': 1.0, 'J5s': 1.0, 'J4s': 1.0, 'J3s': 1.0, 'J2s': 1.0,
+                # Suited jacks (good connectivity)
+                'JTs': 1.0, 'J9s': 1.0, 'J8s': 0.8, 'J7s': 0.7, 'J6s': 0.5, 'J5s': 0.4,
                 
-                # Offsuit jacks (100% frequency)
-                'JTo': 1.0, 'J9o': 1.0, 'J8o': 1.0, 'J7o': 1.0, 'J6o': 1.0, 'J5o': 1.0, 'J4o': 1.0, 'J3o': 1.0, 'J2o': 1.0,
+                # Offsuit jacks (selective)
+                'JTo': 1.0, 'J9o': 0.7, 'J8o': 0.4, 'J7o': 0.2,
                 
-                # Suited tens (100% frequency)
-                'T9s': 1.0, 'T8s': 1.0, 'T7s': 1.0, 'T6s': 1.0, 'T5s': 1.0, 'T4s': 1.0, 'T3s': 1.0, 'T2s': 1.0,
+                # Suited tens (connectors)
+                'T9s': 1.0, 'T8s': 1.0, 'T7s': 0.8, 'T6s': 0.6, 'T5s': 0.5,
                 
-                # Offsuit tens (100% frequency)
-                'T9o': 1.0, 'T8o': 1.0, 'T7o': 1.0, 'T6o': 1.0, 'T5o': 1.0, 'T4o': 1.0, 'T3o': 1.0, 'T2o': 1.0,
+                # Offsuit tens (limited)
+                'T9o': 0.8, 'T8o': 0.5, 'T7o': 0.3,
                 
-                # Suited connectors (100% frequency)
-                '98s': 1.0, '97s': 1.0, '96s': 1.0, '95s': 1.0, '94s': 1.0, '93s': 1.0, '92s': 1.0,
-                '87s': 1.0, '86s': 1.0, '85s': 1.0, '84s': 1.0, '83s': 1.0, '82s': 1.0,
-                '76s': 1.0, '75s': 1.0, '74s': 1.0, '73s': 1.0, '72s': 1.0,
-                '65s': 1.0, '64s': 1.0, '63s': 1.0, '62s': 1.0,
-                '54s': 1.0, '53s': 1.0, '52s': 1.0,
-                '43s': 1.0, '42s': 1.0,
-                '32s': 1.0,
+                # Suited connectors (good playability)
+                '98s': 1.0, '97s': 0.8, '96s': 0.6,
+                '87s': 1.0, '86s': 0.7, '85s': 0.5,
+                '76s': 1.0, '75s': 0.6,
+                '65s': 1.0, '64s': 0.5,
+                '54s': 1.0, '53s': 0.4,
+                '43s': 0.7,
                 
-                # Offsuit connectors (100% frequency)
-                '98o': 1.0, '97o': 1.0, '96o': 1.0, '95o': 1.0, '94o': 1.0, '93o': 1.0, '92o': 1.0,
-                '87o': 1.0, '86o': 1.0, '85o': 1.0, '84o': 1.0, '83o': 1.0, '82o': 1.0,
-                '76o': 1.0, '75o': 1.0, '74o': 1.0, '73o': 1.0, '72o': 1.0,
-                '65o': 1.0, '64o': 1.0, '63o': 1.0, '62o': 1.0,
-                '54o': 1.0, '53o': 1.0, '52o': 1.0,
-                '43o': 1.0, '42o': 1.0,
-                '32o': 1.0,
+                # Offsuit connectors (very selective)
+                '98o': 0.6, '97o': 0.3,
+                '87o': 0.5,
+                '76o': 0.4,
+                '65o': 0.3,
             }
             
         elif position == 'big_blind' and action == 'call':
-            # Big blind calling range vs button raise (more selective)
+            # Big blind calling range vs button raise (balanced but realistic)
             weights = {
-                # Premium pairs (100% frequency)
+                # All pairs (high frequency - have good implied odds)
                 'AA': 1.0, 'KK': 1.0, 'QQ': 1.0, 'JJ': 1.0, 'TT': 1.0, '99': 1.0, '88': 1.0, '77': 1.0, '66': 1.0, '55': 1.0, '44': 1.0, '33': 1.0, '22': 1.0,
                 
-                # Premium suited aces (100% frequency)
+                # All suited aces (high frequency - good playability)
                 'AKs': 1.0, 'AQs': 1.0, 'AJs': 1.0, 'ATs': 1.0, 'A9s': 1.0, 'A8s': 1.0, 'A7s': 1.0, 'A6s': 1.0, 'A5s': 1.0, 'A4s': 1.0, 'A3s': 1.0, 'A2s': 1.0,
                 
-                # Premium offsuit aces (100% frequency)
-                'AKo': 1.0, 'AQo': 1.0, 'AJo': 1.0, 'ATo': 1.0, 'A9o': 1.0, 'A8o': 1.0, 'A7o': 1.0, 'A6o': 1.0, 'A5o': 1.0, 'A4o': 1.0, 'A3o': 1.0, 'A2o': 1.0,
+                # Strong offsuit aces (mixed frequency)
+                'AKo': 1.0, 'AQo': 1.0, 'AJo': 1.0, 'ATo': 1.0, 'A9o': 0.9, 'A8o': 0.7, 'A7o': 0.6, 'A6o': 0.5, 'A5o': 0.6, 'A4o': 0.5, 'A3o': 0.5, 'A2o': 0.5,
                 
-                # Premium suited kings (100% frequency)
-                'KQs': 1.0, 'KJs': 1.0, 'KTs': 1.0, 'K9s': 1.0, 'K8s': 1.0, 'K7s': 1.0, 'K6s': 1.0, 'K5s': 1.0, 'K4s': 1.0, 'K3s': 1.0, 'K2s': 1.0,
+                # Suited kings (good frequency)
+                'KQs': 1.0, 'KJs': 1.0, 'KTs': 1.0, 'K9s': 1.0, 'K8s': 0.9, 'K7s': 0.8, 'K6s': 0.7, 'K5s': 0.7, 'K4s': 0.6, 'K3s': 0.6, 'K2s': 0.6,
                 
-                # Premium offsuit kings (100% frequency)
-                'KQo': 1.0, 'KJo': 1.0, 'KTo': 1.0, 'K9o': 1.0, 'K8o': 1.0, 'K7o': 1.0, 'K6o': 1.0, 'K5o': 1.0, 'K4o': 1.0, 'K3o': 1.0, 'K2o': 1.0,
+                # Offsuit kings (selective)
+                'KQo': 1.0, 'KJo': 1.0, 'KTo': 0.9, 'K9o': 0.7, 'K8o': 0.5, 'K7o': 0.4, 'K6o': 0.3, 'K5o': 0.3, 'K4o': 0.2, 'K3o': 0.2, 'K2o': 0.2,
                 
-                # Suited broadways (100% frequency)
-                'QJs': 1.0, 'QTs': 1.0, 'Q9s': 1.0, 'Q8s': 1.0, 'Q7s': 1.0, 'Q6s': 1.0, 'Q5s': 1.0, 'Q4s': 1.0, 'Q3s': 1.0, 'Q2s': 1.0,
+                # Suited queens (good connectivity)
+                'QJs': 1.0, 'QTs': 1.0, 'Q9s': 1.0, 'Q8s': 0.9, 'Q7s': 0.8, 'Q6s': 0.7, 'Q5s': 0.6, 'Q4s': 0.5, 'Q3s': 0.4, 'Q2s': 0.3,
                 
-                # Offsuit broadways (100% frequency)
-                'QJo': 1.0, 'QTo': 1.0, 'Q9o': 1.0, 'Q8o': 1.0, 'Q7o': 1.0, 'Q6o': 1.0, 'Q5o': 1.0, 'Q4o': 1.0, 'Q3o': 1.0, 'Q2o': 1.0,
+                # Offsuit queens (mixed frequency)
+                'QJo': 1.0, 'QTo': 0.9, 'Q9o': 0.7, 'Q8o': 0.5, 'Q7o': 0.4, 'Q6o': 0.3, 'Q5o': 0.2, 'Q4o': 0.1, 'Q3o': 0.1, 'Q2o': 0.1,
                 
-                # Suited jacks (100% frequency)
-                'JTs': 1.0, 'J9s': 1.0, 'J8s': 1.0, 'J7s': 1.0, 'J6s': 1.0, 'J5s': 1.0, 'J4s': 1.0, 'J3s': 1.0, 'J2s': 1.0,
+                # Suited jacks (good connectivity)
+                'JTs': 1.0, 'J9s': 1.0, 'J8s': 1.0, 'J7s': 0.9, 'J6s': 0.7, 'J5s': 0.6, 'J4s': 0.5, 'J3s': 0.4, 'J2s': 0.3,
                 
-                # Offsuit jacks (100% frequency)
-                'JTo': 1.0, 'J9o': 1.0, 'J8o': 1.0, 'J7o': 1.0, 'J6o': 1.0, 'J5o': 1.0, 'J4o': 1.0, 'J3o': 1.0, 'J2o': 1.0,
+                # Offsuit jacks (mixed frequency)
+                'JTo': 1.0, 'J9o': 0.8, 'J8o': 0.6, 'J7o': 0.4, 'J6o': 0.3, 'J5o': 0.2, 'J4o': 0.1, 'J3o': 0.1, 'J2o': 0.1,
                 
-                # Suited tens (100% frequency)
-                'T9s': 1.0, 'T8s': 1.0, 'T7s': 1.0, 'T6s': 1.0, 'T5s': 1.0, 'T4s': 1.0, 'T3s': 1.0, 'T2s': 1.0,
+                # Suited tens (connectors and strong)
+                'T9s': 1.0, 'T8s': 1.0, 'T7s': 1.0, 'T6s': 0.9, 'T5s': 0.8, 'T4s': 0.6, 'T3s': 0.4, 'T2s': 0.3,
                 
-                # Offsuit tens (100% frequency)
-                'T9o': 1.0, 'T8o': 1.0, 'T7o': 1.0, 'T6o': 1.0, 'T5o': 1.0, 'T4o': 1.0, 'T3o': 1.0, 'T2o': 1.0,
+                # Offsuit tens (selective)
+                'T9o': 0.9, 'T8o': 0.7, 'T7o': 0.5, 'T6o': 0.3, 'T5o': 0.2, 'T4o': 0.1, 'T3o': 0.1, 'T2o': 0.1,
                 
-                # Suited connectors (100% frequency)
-                '98s': 1.0, '97s': 1.0, '96s': 1.0, '95s': 1.0, '94s': 1.0, '93s': 1.0, '92s': 1.0,
-                '87s': 1.0, '86s': 1.0, '85s': 1.0, '84s': 1.0, '83s': 1.0, '82s': 1.0,
-                '76s': 1.0, '75s': 1.0, '74s': 1.0, '73s': 1.0, '72s': 1.0,
-                '65s': 1.0, '64s': 1.0, '63s': 1.0, '62s': 1.0,
-                '54s': 1.0, '53s': 1.0, '52s': 1.0,
-                '43s': 1.0, '42s': 1.0,
-                '32s': 1.0,
+                # Suited connectors and gappers (good playability)
+                '98s': 1.0, '97s': 1.0, '96s': 0.8, '95s': 0.6, '94s': 0.4, '93s': 0.3, '92s': 0.2,
+                '87s': 1.0, '86s': 0.9, '85s': 0.7, '84s': 0.5, '83s': 0.3, '82s': 0.2,
+                '76s': 1.0, '75s': 0.8, '74s': 0.6, '73s': 0.4, '72s': 0.2,
+                '65s': 1.0, '64s': 0.7, '63s': 0.5, '62s': 0.3,
+                '54s': 1.0, '53s': 0.6, '52s': 0.3,
+                '43s': 0.8, '42s': 0.4,
+                '32s': 0.3,
                 
-                # Offsuit connectors (100% frequency)
-                '98o': 1.0, '97o': 1.0, '96o': 1.0, '95o': 1.0, '94o': 1.0, '93o': 1.0, '92o': 1.0,
-                '87o': 1.0, '86o': 1.0, '85o': 1.0, '84o': 1.0, '83o': 1.0, '82o': 1.0,
-                '76o': 1.0, '75o': 1.0, '74o': 1.0, '73o': 1.0, '72o': 1.0,
-                '65o': 1.0, '64o': 1.0, '63o': 1.0, '62o': 1.0,
-                '54o': 1.0, '53o': 1.0, '52o': 1.0,
-                '43o': 1.0, '42o': 1.0,
-                '32o': 1.0,
+                # Offsuit connectors (very selective - only strong ones)
+                '98o': 0.7, '97o': 0.5, '96o': 0.3, '95o': 0.2, '94o': 0.1, '93o': 0.1, '92o': 0.1,
+                '87o': 0.6, '86o': 0.4, '85o': 0.2, '84o': 0.1, '83o': 0.1, '82o': 0.1,
+                '76o': 0.5, '75o': 0.3, '74o': 0.1, '73o': 0.1, '72o': 0.0,  # 72o is the worst hand
+                '65o': 0.4, '64o': 0.2, '63o': 0.1, '62o': 0.1,
+                '54o': 0.3, '53o': 0.1, '52o': 0.1,
+                '43o': 0.2, '42o': 0.1,
+                '32o': 0.1,
             }
             
         else:
@@ -515,6 +501,113 @@ class Range:
                             if suit1 != suit2:
                                 combos.append((f"{rank1}{suit1}{rank2}{suit2}", weight))
         return combos
+    
+    def partition_range(self, opponent_range_str, board_cards):
+        """
+        Partitions a range into value, semi-bluff, and bluff categories based on the board.
+        
+        Args:
+            opponent_range_str: String representation of opponent's range (e.g., "AA,KK,QQ,AKs")
+            board_cards: List of Card objects (community cards)
+            
+        Returns:
+            dict: Dictionary with 'value', 'semi_bluff', and 'bluff' lists of hands
+        """
+        from ..utils.hand_evaluator import HandEvaluator
+        
+        evaluator = HandEvaluator()
+        all_hands = self.parse_range(opponent_range_str)
+
+        partitions = {
+            "value": [],        # Two pair or better
+            "semi_bluff": [],   # Strong draws
+            "bluff": []         # Everything else
+        }
+
+        # Remove impossible hands given the board
+        possible_hands = [
+            hand for hand in all_hands
+            if not any(c in board_cards for c in hand)
+        ]
+
+        for hand in possible_hands:
+            # The rank from the evaluator (lower is better)
+            # 7461 is high card, 1 is a straight flush
+            rank, hand_type = evaluator.evaluate_hand_with_type(hand, board_cards)
+
+            # Check for strong draws (at least 8 outs for OESD or flush draw)
+            # This is a simplification; a more robust check is needed
+            outs, is_flush_draw, is_straight_draw = self._calculate_draw_outs(hand, board_cards)
+
+            if hand_type in ["Straight Flush", "Four of a Kind", "Full House", "Flush", "Straight", "Three of a Kind", "Two Pair"]:
+                partitions["value"].append(hand)
+            elif is_flush_draw or is_straight_draw:
+                partitions["semi_bluff"].append(hand)
+            else:
+                partitions["bluff"].append(hand)
+
+        return partitions
+
+    def _calculate_draw_outs(self, hand, board):
+        """
+        A helper function to determine if a hand is a strong draw.
+        
+        Args:
+            hand: List of Card objects (hole cards)
+            board: List of Card objects (community cards)
+            
+        Returns:
+            tuple: (outs, is_flush_draw, is_straight_draw)
+        """
+        # This is a placeholder for more complex draw detection logic
+        # For now, we'll do a simple check
+        all_cards = hand + board
+        
+        # Flush draw check
+        suits = [c.suit for c in all_cards]
+        is_flush_draw = any(suits.count(s) == 4 for s in 'shdc')
+
+        # Straight draw check (simplified)
+        ranks = sorted(list(set([c.get_rank_value() for c in all_cards])))
+        is_straight_draw = False
+        if len(ranks) >= 4:
+            for i in range(len(ranks) - 3):
+                # Check for 4 consecutive ranks (open-ended)
+                if ranks[i+3] - ranks[i] == 3:
+                    is_straight_draw = True
+                    break
+                # Check for gutshot (e.g., 5,6,8,9)
+                if ranks[i+3] - ranks[i] == 4 and len(ranks) == 4:
+                     is_straight_draw = True
+                     break
+        
+        # This is a simplified out counter
+        outs = 0
+        if is_flush_draw:
+            outs += 9
+        if is_straight_draw:
+            outs += 8  # Could be 4 for gutshot, but simplified for now
+        
+        return outs, is_flush_draw, is_straight_draw
+
+    def parse_range(self, range_str):
+        """
+        Parse a range string into a list of hand combinations.
+        
+        Args:
+            range_str: String like "AA,KK,QQ,AKs"
+            
+        Returns:
+            List of hand combinations
+        """
+        hands = []
+        for hand_str in range_str.split(','):
+            hand_str = hand_str.strip()
+            if len(hand_str) == 2:  # Pair
+                hands.append(hand_str)
+            elif len(hand_str) == 3:  # Suited or offsuit
+                hands.append(hand_str)
+        return hands
     
     def __len__(self):
         """Return the number of hands in the range."""

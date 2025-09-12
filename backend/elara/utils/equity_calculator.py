@@ -184,6 +184,73 @@ class EquityCalculator:
             # This is a very simplified heuristic
             return 0.6 + (raw_equity * 0.4)  # 60-100% realization
     
+    def monte_carlo_equity(self, hero_cards, opponent_range_str, board_cards, num_simulations=5000):
+        """
+        Calculates hero's equity using a Monte Carlo simulation.
+        
+        Args:
+            hero_cards: List of Card objects (hero's hole cards)
+            opponent_range_str: String representation of opponent's range (e.g., "AA,KK,QQ,AKs")
+            board_cards: List of Card objects (community cards)
+            num_simulations: Number of Monte Carlo simulations
+            
+        Returns:
+            float: Hero's equity (0.0 to 1.0)
+        """
+        if not isinstance(hero_cards, list):
+            raise TypeError("hero_cards must be a list of Card objects.")
+        if not isinstance(board_cards, list):
+            raise TypeError("board_cards must be a list of Card objects.")
+
+        from ..giffer.range_handler import Range
+        
+        range_handler = Range.from_hand_list(opponent_range_str.split(','))
+        evaluator = self.hand_evaluator
+        
+        # Get all possible two-card hands from the string notation
+        opponent_hands = range_handler.expand_to_combos()
+
+        wins = 0
+        ties = 0
+
+        # Remove known cards from the possible opponent hands
+        known_cards = hero_cards + board_cards
+        opponent_hands = [
+            (combo_str, weight) for combo_str, weight in opponent_hands 
+            if not any(card in combo_str for card in [str(c) for c in known_cards])
+        ]
+
+        if not opponent_hands:
+            return 0.0  # Opponent range is impossible given known cards
+
+        for _ in range(num_simulations):
+            # 1. Create a deck and remove known cards
+            sim_deck = Deck.create_from_excluded_cards(known_cards)
+
+            # 2. Randomly select an opponent hand from their range
+            combo_str, weight = random.choice(opponent_hands)
+            opponent_hand = Card.parse_hand_string(combo_str)
+            
+            # Create a copy of the deck for this simulation run
+            run_deck = Deck.create_from_excluded_cards(known_cards + opponent_hand)
+            run_deck.shuffle()
+
+            # 3. Deal the rest of the board
+            num_remaining_cards = 5 - len(board_cards)
+            sim_board = board_cards + run_deck.deal(num_remaining_cards)
+
+            # 4. Evaluate hands
+            hero_rank = evaluator.evaluate_hand(hero_cards + sim_board)
+            villain_rank = evaluator.evaluate_hand(opponent_hand + sim_board)
+
+            if hero_rank < villain_rank:  # Lower rank is better in eval7
+                wins += 1
+            elif hero_rank == villain_rank:
+                ties += 1
+        
+        equity = (wins + (ties / 2)) / num_simulations
+        return equity
+    
     def _convert_to_cards(self, card_list):
         """Convert a list of card representations to Card objects."""
         if card_list is None:

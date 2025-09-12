@@ -10,6 +10,8 @@ from ..engine.card import Card
 from ..engine.game_state import GameState, Street, Position, Action
 from ..engine.evaluator import HandEvaluator
 from ..giffer.range_handler import Range, GTOCharts
+from ..gto.strategy import GtoStrategy
+from ..engine.player_profile import OpponentModeler
 from .equity_calculator import EquityCalculator
 
 class ElaraHandEvaluator:
@@ -21,6 +23,8 @@ class ElaraHandEvaluator:
     2. Calculates core metrics (equity, equity realization)
     3. Partitions the opponent's range into strategic categories
     4. Provides actionable insights for decision making
+    5. Integrates Monte Carlo simulation for post-flop analysis
+    6. Uses dynamic opponent modeling for personalized strategy
     """
     
     def __init__(self):
@@ -28,8 +32,10 @@ class ElaraHandEvaluator:
         self.hand_evaluator = HandEvaluator()
         self.equity_calculator = EquityCalculator()
         self.gto_charts = GTOCharts()
+        self.gto_strategy = GtoStrategy()
+        self.opponent_modeler = OpponentModeler()
     
-    def evaluate_hand(self, hero_hand, game_state, opponent_range=None):
+    def evaluate_hand(self, hero_hand, game_state, opponent_range=None, opponent_name=None):
         """
         Perform a comprehensive hand evaluation.
         
@@ -37,18 +43,27 @@ class ElaraHandEvaluator:
             hero_hand: List of 2 Card objects (hero's hole cards)
             game_state: GameState object with current game information
             opponent_range: Optional Range object (if None, will be inferred)
+            opponent_name: Optional opponent name for dynamic modeling
             
         Returns:
             dict: Comprehensive evaluation results
         """
         # Step 1: Establish opponent's current range
         if opponent_range is None:
-            opponent_range = self._establish_opponent_range(game_state)
+            opponent_range = self._establish_opponent_range(game_state, opponent_name)
         
-        # Step 2: Calculate core metrics
-        equity = self.equity_calculator.calculate_equity(
-            hero_hand, opponent_range, game_state.board
-        )
+        # Step 2: Calculate core metrics using Monte Carlo for post-flop
+        if game_state.board:
+            # Use Monte Carlo for post-flop analysis
+            opponent_range_str = self._range_to_string(opponent_range)
+            equity = self.equity_calculator.monte_carlo_equity(
+                hero_hand, opponent_range_str, game_state.board
+            )
+        else:
+            # Use standard equity calculation for pre-flop
+            equity = self.equity_calculator.calculate_equity(
+                hero_hand, opponent_range, game_state.board
+            )
         
         equity_realization = self.equity_calculator.calculate_equity_realization(
             hero_hand, opponent_range, game_state.board,
@@ -65,6 +80,12 @@ class ElaraHandEvaluator:
             hero_hand, opponent_range, game_state, equity, equity_realization
         )
         
+        # Step 5: Get GTO-based recommendations
+        gto_recommendations = self._get_gto_recommendations(game_state, hero_hand)
+        
+        # Step 6: Get opponent-specific insights
+        opponent_insights = self._get_opponent_insights(opponent_name, opponent_range)
+        
         return {
             'hero_hand': [str(card) for card in hero_hand],
             'board': [str(card) for card in game_state.board],
@@ -76,17 +97,21 @@ class ElaraHandEvaluator:
             'range_analysis': range_analysis,
             'strategic_metrics': strategic_metrics,
             'opponent_range_size': len(opponent_range),
+            'gto_recommendations': gto_recommendations,
+            'opponent_insights': opponent_insights,
             'recommendations': self._generate_recommendations(
-                equity, equity_realization, range_analysis, strategic_metrics, game_state
+                equity, equity_realization, range_analysis, strategic_metrics, 
+                game_state, gto_recommendations, opponent_insights
             )
         }
     
-    def _establish_opponent_range(self, game_state):
+    def _establish_opponent_range(self, game_state, opponent_name=None):
         """
-        Establish the opponent's current range based on GTO charts and action history.
+        Establish the opponent's current range based on GTO charts, action history, and opponent modeling.
         
         Args:
             game_state: GameState object
+            opponent_name: Optional opponent name for dynamic modeling
             
         Returns:
             Range object representing opponent's likely holdings
@@ -98,6 +123,12 @@ class ElaraHandEvaluator:
         else:
             # Hero is big blind, villain is button
             baseline_range = Range.from_gto_chart('button', 'raise')
+        
+        # Apply opponent-specific adjustments if available
+        if opponent_name:
+            baseline_range = self.opponent_modeler.get_adjusted_range_for_player(
+                opponent_name, baseline_range
+            )
         
         # Apply range filtering based on action history
         current_range = baseline_range
@@ -117,7 +148,7 @@ class ElaraHandEvaluator:
     
     def _partition_opponent_range(self, hero_hand, opponent_range, game_state):
         """
-        Partition the opponent's range into strategic categories.
+        Partition the opponent's range into strategic categories using the new partitioning method.
         
         Args:
             hero_hand: Hero's hole cards
@@ -127,33 +158,53 @@ class ElaraHandEvaluator:
         Returns:
             dict: Range partitioning analysis
         """
-        # This is a simplified implementation
-        # A full implementation would evaluate each hand in the range
+        if not game_state.board:
+            # Pre-flop partitioning is simpler
+            return self._partition_preflop_range(opponent_range)
         
+        # Use the new range partitioning method for post-flop
+        opponent_range_str = self._range_to_string(opponent_range)
+        partitions = opponent_range.partition_range(opponent_range_str, game_state.board)
+        
+        # Calculate percentages
+        total_hands = len(partitions['value']) + len(partitions['semi_bluff']) + len(partitions['bluff'])
+        
+        if total_hands == 0:
+            return {
+                'value_targets': 0.0,
+                'fold_equity': 0.0,
+                'threats': 0.0,
+                'dominated_draws': 0.0,
+                'total_hands': 0
+            }
+        
+        return {
+            'value_targets': len(partitions['value']) / total_hands,
+            'fold_equity': len(partitions['bluff']) / total_hands,
+            'threats': len(partitions['value']) / total_hands,  # Simplified
+            'dominated_draws': len(partitions['semi_bluff']) / total_hands,
+            'total_hands': total_hands,
+            'partitions': partitions
+        }
+    
+    def _partition_preflop_range(self, opponent_range):
+        """Partition range for pre-flop situations."""
         weighted_hands = opponent_range.get_weighted_hands()
         
-        value_targets = 0.0  # Hands we beat that continue
-        fold_equity = 0.0    # Hands we beat that fold
-        threats = 0.0        # Hands we lose to
-        dominated_draws = 0.0 # Hands we beat with better draws
+        value_targets = 0.0
+        fold_equity = 0.0
+        threats = 0.0
+        dominated_draws = 0.0
         
-        # Simplified categorization based on hand strength
         for hand_str, weight in weighted_hands.items():
-            # This is a very simplified approach
-            # In practice, you'd evaluate each hand against hero's hand
-            
             hand_strength = opponent_range._get_hand_strength(hand_str)
-            hero_strength = self._estimate_hero_strength(hero_hand, game_state.board)
             
-            if hero_strength > hand_strength:
-                # We beat this hand
-                if hand_strength > 0.7:  # Strong hand that continues
-                    value_targets += weight
-                else:  # Weak hand that folds
-                    fold_equity += weight
+            if hand_strength > 0.7:
+                value_targets += weight
+            elif hand_strength < 0.3:
+                fold_equity += weight
             else:
-                # We lose to this hand
-                threats += weight
+                dominated_draws += weight
         
         return {
             'value_targets': value_targets,
@@ -162,6 +213,79 @@ class ElaraHandEvaluator:
             'dominated_draws': dominated_draws,
             'total_hands': sum(weighted_hands.values())
         }
+    
+    def _get_gto_recommendations(self, game_state, hero_hand):
+        """
+        Get GTO-based recommendations for the current situation.
+        
+        Args:
+            game_state: Current game state
+            hero_hand: Hero's hole cards
+            
+        Returns:
+            dict: GTO recommendations
+        """
+        if not game_state.board:  # Pre-flop
+            position = self._game_position_to_gto_position(game_state.hero_position)
+            action = self.gto_strategy.get_preflop_action(position, hero_hand)
+            
+            return {
+                'action': action,
+                'position': position,
+                'confidence': 0.8,  # High confidence for pre-flop charts
+                'reasoning': f"GTO chart recommendation for {position} position"
+            }
+        else:
+            # Post-flop GTO recommendations would be more complex
+            return {
+                'action': 'ANALYZE',
+                'confidence': 0.6,
+                'reasoning': "Post-flop GTO analysis requires solver data"
+            }
+    
+    def _get_opponent_insights(self, opponent_name, opponent_range):
+        """
+        Get insights about the opponent based on their profile.
+        
+        Args:
+            opponent_name: Opponent name
+            opponent_range: Opponent's current range
+            
+        Returns:
+            dict: Opponent insights
+        """
+        if not opponent_name:
+            return {
+                'confidence': 0.0,
+                'tendencies': 'Unknown opponent',
+                'range_adjustment': 'None'
+            }
+        
+        profile = self.opponent_modeler.get_profile(opponent_name)
+        tendencies = self.opponent_modeler.get_player_tendencies(opponent_name)
+        
+        return {
+            'confidence': profile.get_confidence_level(),
+            'tendencies': tendencies,
+            'range_adjustment': f"Tightness: {profile.tightness_factor:.2f}, Aggression: {profile.aggression_factor:.2f}",
+            'vpip': profile.vpip,
+            'pfr': profile.pfr,
+            'aggression_factor': profile.aggression_factor
+        }
+    
+    def _game_position_to_gto_position(self, game_position):
+        """Convert game position to GTO position format."""
+        if game_position == Position.BUTTON:
+            return 'BTN'
+        elif game_position == Position.BIG_BLIND:
+            return 'BB'
+        else:
+            return 'BB'  # Default
+    
+    def _range_to_string(self, opponent_range):
+        """Convert Range object to string format for Monte Carlo."""
+        weighted_hands = opponent_range.get_weighted_hands()
+        return ','.join(weighted_hands.keys())
     
     def _calculate_strategic_metrics(self, hero_hand, opponent_range, game_state, equity, equity_realization):
         """
@@ -280,7 +404,7 @@ class ElaraHandEvaluator:
         
         return ev
     
-    def _generate_recommendations(self, equity, equity_realization, range_analysis, strategic_metrics, game_state):
+    def _generate_recommendations(self, equity, equity_realization, range_analysis, strategic_metrics, game_state, gto_recommendations, opponent_insights):
         """
         Generate strategic recommendations based on the analysis.
         
@@ -290,6 +414,8 @@ class ElaraHandEvaluator:
             range_analysis: Range partitioning results
             strategic_metrics: Strategic metrics
             game_state: Game state
+            gto_recommendations: GTO-based recommendations
+            opponent_insights: Opponent-specific insights
             
         Returns:
             dict: Strategic recommendations
