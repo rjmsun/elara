@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 from .card import Card
 
-# hand evaluator - figures out what kind of hand you have
+# hand evaluator: figures out what hand you have
 class HandEvaluator:
     def __init__(self):
         self.hand_rankings = {

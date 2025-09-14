@@ -12,7 +12,7 @@ def validate_no_duplicate_cards(hero_hand, board):
     card_strings = [f"{card.rank}{card.suit}" for card in all_cards]
     
     if len(card_strings) != len(set(card_strings)):
-        # Find duplicates
+        # find the duplicates
         seen = set()
         duplicates = set()
         for card_str in card_strings:
@@ -24,20 +24,20 @@ def validate_no_duplicate_cards(hero_hand, board):
 def get_dynamic_opponent_range(position, pot_size, current_bet, board):
     """Get a dynamic opponent range based on betting action and board texture"""
     
-    # Calculate bet sizing to determine range tightness
+    # figure out how big the bet is to see how tight their range should be
     bet_to_pot_ratio = current_bet / max(pot_size, 1) if pot_size > 0 else 0
     
-    # Base ranges by position
+    # different positions have different ranges
     if position == "SB":
-        # Against SB, BB defends wider
-        if bet_to_pot_ratio < 0.5:  # Small bet/limp
+        # against sb, bb defends wider
+        if bet_to_pot_ratio < 0.5:  # small bet/limp
             range_type = "wide"
-        elif bet_to_pot_ratio < 1.0:  # Medium bet
+        elif bet_to_pot_ratio < 1.0:  # medium bet
             range_type = "medium"
-        else:  # Large bet
+        else:  # large bet
             range_type = "tight"
     else:  # BB
-        # Against BB, SB can be more aggressive
+        # against bb, sb can be more aggressive
         if bet_to_pot_ratio < 0.3:
             range_type = "wide"
         elif bet_to_pot_ratio < 0.8:
@@ -45,9 +45,9 @@ def get_dynamic_opponent_range(position, pot_size, current_bet, board):
         else:
             range_type = "tight"
     
-    # Define ranges based on tightness
+    # pick the range based on tightness
     if range_type == "wide":
-        # ~40% of hands - loose range
+        # ~40% of hands: loose range
         return [
             'AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55', '44', '33', '22',
             'AKs', 'AQs', 'AJs', 'ATs', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s',
@@ -66,7 +66,7 @@ def get_dynamic_opponent_range(position, pot_size, current_bet, board):
             'T9o'
         ]
     elif range_type == "medium":
-        # ~25% of hands - standard range
+        # ~25% of hands: standard range
         return [
             'AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55', '44', '33', '22',
             'AKs', 'AQs', 'AJs', 'ATs', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s',
@@ -82,7 +82,7 @@ def get_dynamic_opponent_range(position, pot_size, current_bet, board):
             'QJo'
         ]
     else:  # tight
-        # ~15% of hands - tight range
+        # ~15% of hands: tight range
         return [
             'AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55',
             'AKs', 'AQs', 'AJs', 'ATs', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s',
@@ -98,17 +98,17 @@ def get_dynamic_opponent_range(position, pot_size, current_bet, board):
 def calculate_dynamic_hand_strength(hero_hand, board, position, pot_size, current_bet):
     """Calculate hand strength against a dynamic opponent range"""
     try:
-        # Get dynamic opponent range based on betting
+        # get the opponent's range based on their betting
         opponent_range = get_dynamic_opponent_range(position, pot_size, current_bet, board)
         
-        # Use equity calculator to get win rate against this range
+        # use equity calculator to get win rate against this range
         equity = equity_calculator.calculate_equity(hero_hand, opponent_range, board, simulations=500)
         
-        # Convert equity (0.0-1.0) to percentage (0-100)
+        # convert equity (0.0-1.0) to percentage (0-100)
         return round(equity * 100, 1)
     except Exception as e:
         print(f"Error calculating dynamic hand strength: {e}")
-        # Fallback to percentile calculation
+        # fallback to percentile calculation
         return calculate_hand_percentile(hero_hand)
 
 def calculate_hand_percentile(hero_hand):
@@ -116,11 +116,11 @@ def calculate_hand_percentile(hero_hand):
     if len(hero_hand) != 2:
         return 0.0
     
-    # All possible starting hands (169 total)
+    # all possible starting hands (169 total)
     all_hands = [
-        # Pairs (13 hands)
+        # pairs (13 hands)
         'AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55', '44', '33', '22',
-        # Suited hands (78 hands)
+        # suited hands (78 hands)
         'AKs', 'AQs', 'AJs', 'ATs', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s',
         'KQs', 'KJs', 'KTs', 'K9s', 'K8s', 'K7s', 'K6s', 'K5s', 'K4s', 'K3s', 'K2s',
         'QJs', 'QTs', 'Q9s', 'Q8s', 'Q7s', 'Q6s', 'Q5s', 'Q4s', 'Q3s', 'Q2s',
@@ -133,7 +133,7 @@ def calculate_hand_percentile(hero_hand):
         '54s', '53s', '52s',
         '43s', '42s',
         '32s',
-        # Offsuit hands (78 hands)
+        # offsuit hands (78 hands)
         'AKo', 'AQo', 'AJo', 'ATo', 'A9o', 'A8o', 'A7o', 'A6o', 'A5o', 'A4o', 'A3o', 'A2o',
         'KQo', 'KJo', 'KTo', 'K9o', 'K8o', 'K7o', 'K6o', 'K5o', 'K4o', 'K3o', 'K2o',
         'QJo', 'QTo', 'Q9o', 'Q8o', 'Q7o', 'Q6o', 'Q5o', 'Q4o', 'Q3o', 'Q2o',
@@ -148,7 +148,7 @@ def calculate_hand_percentile(hero_hand):
         '32o'
     ]
     
-    # Convert hero hand to notation
+    # turn the hero hand into AKs notation
     card1, card2 = hero_hand
     if card1.value == card2.value:
         hand_notation = f"{card1.rank}{card2.rank}"
@@ -163,16 +163,16 @@ def calculate_hand_percentile(hero_hand):
         else:
             hand_notation = f"{card2.rank}{card1.rank}o"
     
-    # Find position in ranked list
+    # find where this hand ranks
     try:
         position = all_hands.index(hand_notation)
-        # Convert to percentile (0-100)
+        # convert to percentile (0-100)
         percentile = ((len(all_hands) - position - 1) / (len(all_hands) - 1)) * 100
         return round(percentile, 1)
     except ValueError:
         return 0.0
 
-# Initialize components
+# set up components we need
 hand_evaluator = HandEvaluator()
 equity_calculator = EquityCalculator()
 preflop_strategy = PreflopStrategy()
@@ -217,17 +217,17 @@ def register_routes(app):
             board_str = data.get('board', [])
             simulations = data.get('simulations', 1000)
             
-            # Validate inputs
+            # check the inputs
             if len(hero_hand_str) != 2:
                 return jsonify({'error': 'Hero hand must have exactly 2 cards'}), 400
             
             hero_hand = [Card(card_str) for card_str in hero_hand_str]
             board = [Card(card_str) for card_str in board_str]
             
-            # Validate no duplicate cards
+            # make sure no duplicate cards
             validate_no_duplicate_cards(hero_hand, board)
             
-            # Use default top 25% range if no range provided
+            # use default top 25% range if no range provided
             if not villain_range:
                 villain_range = [
                     'AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55', '44', '33', '22',
@@ -265,7 +265,7 @@ def register_routes(app):
             except Exception as e:
                 return jsonify({'error': f'Invalid card format: {str(e)}'}), 400
             
-            # Validate no duplicate cards
+            # make sure no duplicate cards
             all_cards = hero_hand + board
             card_strings = [str(card) for card in all_cards]
             if len(card_strings) != len(set(card_strings)):
@@ -340,7 +340,7 @@ def register_routes(app):
             hero_hand = [Card(card_str) for card_str in hero_hand_str]
             board = [Card(card_str) for card_str in board_str]
             
-            # Validate no duplicate cards
+            # make sure no duplicate cards
             validate_no_duplicate_cards(hero_hand, board)
             
             # Calculate dynamic hand strength against betting-based range

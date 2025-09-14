@@ -20,7 +20,7 @@ def create_app():
     app = Flask(__name__)
     CORS(app)
     
-    # Register all routes
+    # register all routes
     register_routes(app)
     
     return app

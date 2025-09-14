@@ -1,7 +1,7 @@
-# card class - just holds rank, suit, and value
+# card class: holds rank, suit, and value
 class Card:
     def __init__(self, card_str: str):
-        # parse the card string like "As" or "Kh"
+        # parse the card string e.g. "As" or "Kh"
         self.rank = card_str[:-1]
         self.suit = card_str[-1]
         self.value = self._get_value()

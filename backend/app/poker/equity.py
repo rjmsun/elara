@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 from .card import Card
 from .evaluator import HandEvaluator
 
-# equity calculator - runs monte carlo simulations to see how often you win
+# equity calculator: monte carlo sims to see how often you win
 class EquityCalculator:
     def __init__(self):
         self.evaluator = HandEvaluator()
@@ -17,7 +17,7 @@ class EquityCalculator:
         wins = 0
         total = 0
         
-        # Generate all possible villain hands from range
+        # get all possible villain hands from their range
         all_villain_hands = []
         for hand_str in villain_range:
             villain_hands = self._generate_all_combinations(hand_str)
@@ -26,28 +26,28 @@ class EquityCalculator:
         if not all_villain_hands:
             return 0.0
         
-        # Run simulations
+        # run the simulations
         for _ in range(simulations):
-            # Pick a random villain hand from all possible combinations
+            # pick a random villain hand from all possible combinations
             villain_hand = random.choice(all_villain_hands)
             
-            # Check if villain hand conflicts with known cards
+            # check if villain hand conflicts with known cards
             if self._cards_conflict(villain_hand, hero_hand + board):
                 continue
             
-            # Create a fresh deck excluding ALL known cards (hero + villain + board)
+            # create a fresh deck excluding ALL known cards (hero + villain + board)
             deck = self._create_deck(hero_hand + villain_hand, board)
             random.shuffle(deck)
             
-            # Complete the board
+            # complete the board
             remaining_board = 5 - len(board)
             full_board = board + deck[:remaining_board]
             
-            # Evaluate hands
+            # evaluate hands
             hero_best = self._get_best_hand(hero_hand, full_board)
             villain_best = self._get_best_hand(villain_hand, full_board)
             
-            # Compare hands with proper tie-breaking
+            # compare hands with proper tie-breaking
             result = self._compare_hands(hero_best, villain_best, hero_hand, villain_hand, full_board)
             if result > 0:
                 wins += 1
@@ -63,28 +63,28 @@ class EquityCalculator:
         combinations = []
         
         try:
-            if len(hand_str) == 2:  # Pair like 'AA'
+            if len(hand_str) == 2:  # pair e.g. 'AA'
                 rank = hand_str[0]
                 suits = ['s', 'h', 'd', 'c']
-                # Generate all 6 possible pair combinations
+                # generate all 6 possible pair combinations
                 for i in range(len(suits)):
                     for j in range(i + 1, len(suits)):
                         combinations.append([Card(f"{rank}{suits[i]}"), Card(f"{rank}{suits[j]}")])
             
-            elif len(hand_str) == 4:  # Two specific cards like 'AsKh'
+            elif len(hand_str) == 4:  # two specific cards e.g. 'AsKh'
                 combinations.append([Card(hand_str[:2]), Card(hand_str[2:])])
             
-            elif len(hand_str) == 3:  # Suited/offsuit like 'AKs' or 'AKo'
+            elif len(hand_str) == 3:  # suited/offsuit e.g. 'AKs' or 'AKo'
                 rank1, rank2 = hand_str[0], hand_str[1]
-                if hand_str.endswith('s'):  # Suited
+                if hand_str.endswith('s'):  # suited
                     suits = ['s', 'h', 'd', 'c']
                     for suit in suits:
                         combinations.append([Card(f"{rank1}{suit}"), Card(f"{rank2}{suit}")])
-                elif hand_str.endswith('o'):  # Offsuit
+                elif hand_str.endswith('o'):  # offsuit
                     suits = ['s', 'h', 'd', 'c']
                     for i in range(len(suits)):
                         for j in range(len(suits)):
-                            if suits[i] != suits[j]:  # Different suits
+                            if suits[i] != suits[j]:  # different suits
                                 combinations.append([Card(f"{rank1}{suits[i]}"), Card(f"{rank2}{suits[j]}")])
         
         except Exception as e:

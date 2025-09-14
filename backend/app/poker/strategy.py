@@ -4,10 +4,10 @@ from .card import Card
 # preflop strategy - tells you whether to raise, call, or fold preflop
 class PreflopStrategy:
     def __init__(self):
-        # More realistic heads-up preflop charts with mix of raise/call/fold
+        # preflop charts - what to do with each hand
         self.preflop_charts = {
-            'SB': {  # Small Blind (heads up) - aggressive but not 100% raise
-                # Premium hands - always raise
+            'SB': {  # small blind: aggressive but not crazy
+                # these are the good hands - obviously raise these
                 'AA': 'RAISE', 'KK': 'RAISE', 'QQ': 'RAISE', 'JJ': 'RAISE', 'TT': 'RAISE', '99': 'RAISE', '88': 'RAISE', '77': 'RAISE', '66': 'RAISE', '55': 'RAISE', '44': 'RAISE', '33': 'RAISE', '22': 'RAISE',
                 'AKs': 'RAISE', 'AQs': 'RAISE', 'AJs': 'RAISE', 'ATs': 'RAISE', 'A9s': 'RAISE', 'A8s': 'RAISE', 'A7s': 'RAISE', 'A6s': 'RAISE', 'A5s': 'RAISE', 'A4s': 'RAISE', 'A3s': 'RAISE', 'A2s': 'RAISE',
                 'AKo': 'RAISE', 'AQo': 'RAISE', 'AJo': 'RAISE', 'ATo': 'RAISE', 'A9o': 'RAISE', 'A8o': 'RAISE', 'A7o': 'RAISE', 'A6o': 'RAISE', 'A5o': 'RAISE', 'A4o': 'RAISE', 'A3o': 'RAISE', 'A2o': 'RAISE',
@@ -34,8 +34,8 @@ class PreflopStrategy:
                 '32s': 'CALL',
                 '32o': 'FOLD'
             },
-            'BB': {  # Big Blind (heads up) - more selective, some calls and folds
-                # Premium hands - always raise
+            'BB': {  # big blind: a bit more picky here
+                # same good hands - still raise these
                 'AA': 'RAISE', 'KK': 'RAISE', 'QQ': 'RAISE', 'JJ': 'RAISE', 'TT': 'RAISE', '99': 'RAISE', '88': 'RAISE', '77': 'RAISE', '66': 'RAISE', '55': 'RAISE', '44': 'RAISE', '33': 'RAISE', '22': 'RAISE',
                 'AKs': 'RAISE', 'AQs': 'RAISE', 'AJs': 'RAISE', 'ATs': 'RAISE', 'A9s': 'RAISE', 'A8s': 'RAISE', 'A7s': 'RAISE', 'A6s': 'RAISE', 'A5s': 'RAISE', 'A4s': 'RAISE', 'A3s': 'RAISE', 'A2s': 'RAISE',
                 'AKo': 'RAISE', 'AQo': 'RAISE', 'AJo': 'RAISE', 'ATo': 'RAISE', 'A9o': 'RAISE', 'A8o': 'RAISE', 'A7o': 'RAISE', 'A6o': 'RAISE', 'A5o': 'RAISE', 'A4o': 'RAISE', 'A3o': 'RAISE', 'A2o': 'RAISE',
@@ -64,12 +64,12 @@ class PreflopStrategy:
             }
         }
         
-        # GTO thresholds for blending with calculated risk
+        # thresholds for when to do stuff
         self.gto_thresholds = {
             'SB': {
-                'RAISE': 70,  # Top 30% of hands are a default raise
-                'CALL': 30,   # Next 40% are a default call
-                'FOLD': 0     # Bottom 30% are a default fold
+                'RAISE': 70,  # top 30% of hands = raise
+                'CALL': 30,   # next 40% = call
+                'FOLD': 0     # bottom 30% = fold
             },
             'BB': {
                 'RAISE': 80,
@@ -83,18 +83,18 @@ class PreflopStrategy:
         if len(hole_cards) != 2:
             return 'FOLD'
         
-        # Convert cards to hand notation
+        # turn the cards into AKs or 72o format
         card1, card2 = hole_cards
         if card1.value == card2.value:
             hand = f"{card1.rank}{card2.rank}"
         elif card1.suit == card2.suit:
-            # Suited hand - higher card first
+            # suited hand - put the higher card first
             if card1.value > card2.value:
                 hand = f"{card1.rank}{card2.rank}s"
             else:
                 hand = f"{card2.rank}{card1.rank}s"
         else:
-            # Offsuit hand - higher card first
+            # offsuit hand - higher card first
             if card1.value > card2.value:
                 hand = f"{card1.rank}{card2.rank}o"
             else:
@@ -106,15 +106,15 @@ class PreflopStrategy:
     def get_position_specific_action(self, position: str, generic_action: str) -> str:
         """Convert generic action to position-specific action"""
         action_mapping = {
-            'SB': {  # Small Blind can: fold, call (limp), or raise
+            'SB': {  # small blind can fold, call (limp), or raise
                 'FOLD': 'FOLD',
                 'CALL': 'CALL',  # limp in
                 'RAISE': 'RAISE'  # open raise
             },
-            'BB': {  # Big Blind (facing action) can: fold, call, or reraise
+            'BB': {  # big blind can fold, call, or reraise
                 'FOLD': 'FOLD',
-                'CALL': 'CALL',   # call the SB raise/limp
-                'RAISE': 'RERAISE'  # 3-bet the SB
+                'CALL': 'CALL',   # call the sb raise/limp
+                'RAISE': 'RERAISE'  # 3-bet the sb
             }
         }
         
@@ -123,51 +123,51 @@ class PreflopStrategy:
 
     def get_dynamic_preflop_action(self, position: str, hole_cards: List[Card], hand_percentile: float) -> str:
         """Blends chart lookup with calculated risk (GTO components)"""
-        # 1. Get the static chart action
+        # first get what the chart says to do
         chart_action = self.get_preflop_action(position, hole_cards)
         
-        # 2. Get the calculated risk action
+        # then get what the math says to do
         thresholds = self.gto_thresholds.get(position, {})
-        calculated_action = 'FOLD'  # Default
+        calculated_action = 'FOLD'  # default to fold
         if hand_percentile >= thresholds.get('RAISE', 101):
             calculated_action = 'RAISE'
         elif hand_percentile >= thresholds.get('CALL', 101):
             calculated_action = 'CALL'
         
-        # 3. Blend the results
-        # If the chart says to do something more aggressive than the calculation, trust the chart.
-        # This simulates a human strategy overlay on a mathematical baseline.
+        # now blend them together
+        # if the chart is more aggressive than the math, trust the chart
+        # mixing human strategy with math
         if chart_action == 'RAISE':
-            final_action = 'RAISE'  # Chart says it's a clear raise
+            final_action = 'RAISE'  # chart says raise so raise
         elif chart_action == 'CALL' and calculated_action != 'RAISE':
             final_action = 'CALL'
         else:
-            # Otherwise, fall back to the calculated action
+            # otherwise just use the math
             final_action = calculated_action
         
-        # 4. Convert to position-specific action
+        # make it position specific
         return self.get_position_specific_action(position, final_action)
 
     def get_postflop_action(self, position: str, hand_strength: float, pot_odds: float) -> str:
         """Get postflop recommendation based on position, hand strength, and pot odds"""
         
-        # Position-specific action sets
+        # different positions act differently postflop
         if position == "SB":
-            # SB acts first postflop
-            if hand_strength >= 75:  # Very strong hand
+            # sb acts first postflop
+            if hand_strength >= 75:  # really strong hand
                 return "BET"
-            elif hand_strength >= 50:  # Medium strength
-                return "CHECK"  # Can check-call or check-raise
-            else:  # Weak hand
-                return "CHECK"  # Check-fold usually
+            elif hand_strength >= 50:  # medium strength
+                return "CHECK"  # can check-call or check-raise
+            else:  # weak hand
+                return "CHECK"  # check-fold usually
         else:  # BB
-            # BB acts second postflop (if SB checks)
-            if hand_strength >= 70:  # Strong hand
-                return "BET"  # Value bet
-            elif hand_strength >= 40:  # Medium strength
-                if pot_odds <= 0.3:  # Good pot odds
+            # bb acts second postflop (if sb checks)
+            if hand_strength >= 70:  # strong hand
+                return "BET"  # value bet
+            elif hand_strength >= 40:  # medium strength
+                if pot_odds <= 0.3:  # good pot odds
                     return "CALL"
                 else:
                     return "CHECK"
-            else:  # Weak hand
-                return "CHECK"  # Check back or fold to bet
+            else:  # weak hand
+                return "CHECK"  # check back or fold to bet
